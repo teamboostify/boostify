@@ -1,17 +1,20 @@
+import { logger } from "./logger.js";
+
 export interface Config {
   botToken: string;
   clientId: string;
   guildId: string;
   greetChannelId: string;
   logChannelId: string;
+  databaseUrl: string;
 }
 
 function requireEnv(key: string): string {
   const value = process.env[key];
   if (!value) {
-    throw new Error(`Missing required environment variable: ${key}`);
+    logger.fatal(`Missing required environment variable: ${key}`);
   }
-  return value;
+  return value as string;
 }
 
 export function loadVariables(): Config {
@@ -21,5 +24,6 @@ export function loadVariables(): Config {
     guildId: requireEnv("GUILD_ID"),
     greetChannelId: requireEnv("GREET_CHANNEL_ID"),
     logChannelId: requireEnv("LOG_CHANNEL_ID"),
+    databaseUrl: requireEnv("DATABASE_URL"),
   };
 }
