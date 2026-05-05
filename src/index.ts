@@ -57,7 +57,7 @@ for (const file of eventFiles) {
   logger.startup(`Loaded event ${file.replace(/\.[jt]s$/, '')}`);
 }
 
-await loadCommands(client, config.clientId, config.guildId, config.botToken)
+await loadCommands(client, config.clientId, config.botToken, config.guildId ?? undefined)
 
 try {
   client.login(config.botToken);

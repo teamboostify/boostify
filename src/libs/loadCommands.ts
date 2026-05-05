@@ -10,12 +10,13 @@ import {
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
+import { logger } from "./logger.js";
 
 export interface Command {
   data:
-    | SlashCommandBuilder
-    | SlashCommandSubcommandsOnlyBuilder
-    | Omit<SlashCommandBuilder, "addSubcommand" | "addSubcommandGroup">;
+  | SlashCommandBuilder
+  | SlashCommandSubcommandsOnlyBuilder
+  | Omit<SlashCommandBuilder, "addSubcommand" | "addSubcommandGroup">;
   execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
 }
 
@@ -24,8 +25,8 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 export async function loadCommands(
   client: Client & { commands?: Collection<string, Command> },
   clientId: string,
-  guildId: string,
-  token: string
+  token: string,
+  guildId?: string,
 ): Promise<void> {
   client.commands = new Collection<string, Command>();
 
@@ -48,11 +49,23 @@ export async function loadCommands(
 
   const rest = new REST().setToken(token);
 
-  await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
-    body: [],
-  });
+  if (clientId && guildId) {
+    logger.info("here")
+    await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
+      body: [],
+    });
 
-  await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
-    body: commandData,
-  });
+    await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
+      body: commandData,
+    });
+  } else if (clientId) {
+    logger.info("a")
+    await rest.put(Routes.applicationCommands(clientId), {
+      body: [],
+    });
+
+    await rest.put(Routes.applicationCommands(clientId), {
+      body: commandData,
+    });
+  }
 }
