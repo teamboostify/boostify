@@ -8,7 +8,7 @@
     <img src="https://img.shields.io/github/forks/teamboostify/boostify?style=flat-square&color=FF47B5" />
     <img src="https://img.shields.io/github/checks-status/teamboostify/boostify/main?style=flat-square&color=FF47B5" /><br />
     <img src="https://img.shields.io/github/stars/teamboostify/boostify?style=flat-square&color=FF47B5" />
-    <a href="https://discord.gg/NUtyKs7hA6">
+    <a href="https://discord.gg/vZgeWhZ9aF">
         <img src="https://img.shields.io/discord/1453868977720922287?style=flat-square&logo=discord&logoColor=white&label=Support Server&color=7289da" />
     </a>
 </div>
@@ -16,4 +16,4 @@
 ### Overview
 
 > [!NOTE]
-> **Boostify** is a work-in-progress project. While our team ensures everything in our platform works flawlessly, you're more than welcome to make an issue if you find an issue.
+> **Boostify** is a work-in-progress project. While our team ensures everything in our platform works flawlessly, you're more than welcome to make an issue if you find an issue. Please join our Discord server if you require any assistance: [discord.gg/vZgeWhZ9aF](https://discord.gg/vZgeWhZ9aF).
