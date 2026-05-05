@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, GuildMember } from "discord.js";
+import { ChatInputCommandInteraction } from "discord.js";
 import { prisma } from "../libs/database.js";
 import { Prisma } from "../generated/prisma/client.js";
 
@@ -30,9 +30,6 @@ export async function getBooster(
   const resolvedGuild = await interaction.guild?.fetch();
   if (!resolvedGuild) return null;
 
-  const member = (await resolvedGuild.members.fetch(userId)) as GuildMember;
-  if (!member.premiumSince) return null;
-
   const guild = await ensureGuild(
     resolvedGuild.id,
     resolvedGuild.name,
@@ -45,6 +42,91 @@ export async function getBooster(
   });
 
   return { success: true, data };
+}
+
+export async function ensureBoosterWhileBoosting(
+  userId: string,
+  guildDiscordId: string,
+  guildName: string,
+  guildIconUrl?: string | null
+): Promise<BoosterWithRole> {
+  const guild = await ensureGuild(guildDiscordId, guildName, guildIconUrl);
+  const existing = await prisma.booster.findUnique({
+    where: { userId_guildId: { userId, guildId: guild.id } },
+    include: { customRole: true },
+  });
+
+  if (existing) {
+    if (!existing.active) {
+      return prisma.booster.update({
+        where: { id: existing.id },
+        data: { active: true },
+        include: { customRole: true },
+      });
+    }
+    return existing;
+  }
+
+  return prisma.booster.create({
+    data: {
+      userId,
+      guildId: guild.id,
+      active: true,
+      boostCounts: 0,
+    },
+    include: { customRole: true },
+  });
+}
+
+export async function scheduleCustomRoleDeletionAfterGrace(
+  userId: string,
+  guildDiscordId: string
+): Promise<void> {
+  const guild = await prisma.guild.findUnique({
+    where: { discordId: guildDiscordId },
+  });
+  if (!guild) return;
+
+  const booster = await prisma.booster.findUnique({
+    where: { userId_guildId: { userId, guildId: guild.id } },
+    include: { customRole: true },
+  });
+  if (!booster?.customRole) return;
+
+  const graceMs = 3 * 24 * 60 * 60 * 1000;
+  await prisma.customRole.update({
+    where: { id: booster.customRole.id },
+    data: { deleteScheduledAt: new Date(Date.now() + graceMs) },
+  });
+}
+
+export async function clearPendingCustomRoleDeletion(boosterId: string): Promise<void> {
+  await prisma.customRole.updateMany({
+    where: { boosterId, deleteScheduledAt: { not: null } },
+    data: { deleteScheduledAt: null },
+  });
+}
+
+export async function patchCustomRoleStoredName(
+  userId: string,
+  guildDiscordId: string,
+  name: string
+): Promise<void> {
+  const guild = await prisma.guild.findUnique({
+    where: { discordId: guildDiscordId },
+  });
+  if (!guild) return;
+
+  const booster = await prisma.booster.findUnique({
+    where: { userId_guildId: { userId, guildId: guild.id } },
+    include: { customRole: true },
+  });
+  if (!booster?.customRole) return;
+
+  await prisma.customRole.update({
+    where: { id: booster.customRole.id },
+    data: { name },
+  });
 }
 
 export async function getAllBoosters(guildDiscordId: string) {
@@ -157,7 +239,12 @@ export async function removeBoostCount(
   });
 }
 
-export async function setCustomRole(userId: string, guildDiscordId: string, discordRoleId: string | null) {
+export async function setCustomRole(
+  userId: string,
+  guildDiscordId: string,
+  discordRoleId: string | null,
+  roleName?: string | null
+) {
   const guild = await prisma.guild.findUnique({
     where: { discordId: guildDiscordId },
   });
@@ -173,10 +260,19 @@ export async function setCustomRole(userId: string, guildDiscordId: string, disc
     return null;
   }
 
+  const name = roleName?.trim() ?? "";
+
   return prisma.customRole.upsert({
     where: { boosterId: booster.id },
-    update: { discordRoleId },
-    create: { boosterId: booster.id, discordRoleId },
+    update: {
+      discordRoleId,
+      ...(roleName !== undefined && roleName !== null ? { name } : {}),
+    },
+    create: {
+      boosterId: booster.id,
+      discordRoleId,
+      name,
+    },
   });
 }
 

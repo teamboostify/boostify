@@ -103,6 +103,8 @@ export const CustomRoleScalarFieldEnum = {
   id: 'id',
   boosterId: 'boosterId',
   discordRoleId: 'discordRoleId',
+  name: 'name',
+  deleteScheduledAt: 'deleteScheduledAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

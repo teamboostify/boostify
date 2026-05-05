@@ -4,6 +4,7 @@ import {
   PermissionFlagsBits,
   Client,
   Collection,
+  MessageFlags,
 } from "discord.js";
 import { Command } from "../libs/loadCommands.js";
 import { loadCommands } from "../libs/loadCommands.js";
@@ -16,7 +17,7 @@ const reloadCommand: Command = {
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   async execute(interaction: ChatInputCommandInteraction): Promise<void> {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
       const config = loadVariables();

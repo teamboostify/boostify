@@ -2,7 +2,6 @@ export interface Config {
   botToken: string;
   clientId: string;
   guildId: string;
-  boosterRoleId: string;
   greetChannelId: string;
   logChannelId: string;
 }
@@ -20,7 +19,6 @@ export function loadVariables(): Config {
     botToken: requireEnv("BOT_TOKEN"),
     clientId: requireEnv("CLIENT_ID"),
     guildId: requireEnv("GUILD_ID"),
-    boosterRoleId: requireEnv("BOOSTER_ROLE_ID"),
     greetChannelId: requireEnv("GREET_CHANNEL_ID"),
     logChannelId: requireEnv("LOG_CHANNEL_ID"),
   };

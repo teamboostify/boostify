@@ -3,11 +3,12 @@ import {
   GuildMember,
   Role,
   ColorResolvable,
+  resolveColor,
 } from "discord.js";
-import { Config } from "../libs/loadVariables.js";
 import {
   setCustomRole,
   getCustomRole,
+  patchCustomRoleStoredName,
 } from "./boosterService.js";
 
 export interface BoostLevelRole {
@@ -20,26 +21,6 @@ const BOOST_LEVEL_ROLES: BoostLevelRole[] = [
   // { minBoosts: 3, roleId: "ROLE_ID_FOR_3X" },
   // { minBoosts: 5, roleId: "ROLE_ID_FOR_5X" },
 ];
-
-export async function assignBoosterRole(
-  member: GuildMember,
-  config: Config
-): Promise<void> {
-  if (member.roles.cache.has(config.boosterRoleId)) return;
-  const role = member.guild.roles.cache.get(config.boosterRoleId);
-  if (!role) return;
-  await member.roles.add(role);
-}
-
-export async function removeBoosterRole(
-  member: GuildMember,
-  config: Config
-): Promise<void> {
-  if (!member.roles.cache.has(config.boosterRoleId)) return;
-  const role = member.guild.roles.cache.get(config.boosterRoleId);
-  if (!role) return;
-  await member.roles.remove(role);
-}
 
 export async function assignLevelRoles(
   member: GuildMember,
@@ -85,21 +66,14 @@ export async function createCustomRole(
   name: string,
   color: ColorResolvable
 ): Promise<Role> {
-  const boosterRole = guild.roles.cache.get(
-    process.env["BOOSTER_ROLE_ID"] ?? ""
-  );
-
-  const position = boosterRole ? boosterRole.position + 1 : 1;
-
   const role = await guild.roles.create({
     name,
-    color,
+    colors: { primaryColor: resolveColor(color) },
     permissions: [],
-    position,
   });
 
   await member.roles.add(role);
-  await setCustomRole(member.id, guild.id, role.id);
+  await setCustomRole(member.id, guild.id, role.id, role.name);
 
   return role;
 }
@@ -131,8 +105,10 @@ export async function updateCustomRole(
 
   await role.edit({
     ...(name ? { name } : {}),
-    ...(color ? { color } : {}),
+    ...(color ? { colors: { primaryColor: resolveColor(color) } } : {}),
   });
+
+  await patchCustomRoleStoredName(userId, guild.id, role.name);
 
   return role;
 }

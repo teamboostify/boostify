@@ -3,6 +3,9 @@ import {
   ChatInputCommandInteraction,
   EmbedBuilder,
   PermissionFlagsBits,
+  ContainerBuilder,
+  TextDisplayBuilder,
+  MessageFlags,
 } from "discord.js";
 import { Command } from "../libs/loadCommands.js";
 import {
@@ -13,7 +16,6 @@ import {
   getActiveBoosters,
   getTotalBoosts,
   registerBoost,
-  ensureGuild,
 } from "../services/boosterService.js";
 
 const boosterCommand: Command = {
@@ -66,21 +68,59 @@ const boosterCommand: Command = {
   async execute(interaction: ChatInputCommandInteraction): Promise<void> {
     const sub = interaction.options.getSubcommand();
 
-    // All subcommands need a guild — bail early if missing
     const discordGuild = interaction.guild;
     if (!discordGuild) {
-      await interaction.reply({ content: "This command can only be used in a server.", ephemeral: true });
+      await interaction.reply({
+        content: "This command can only be used in a server.",
+        flags: MessageFlags.Ephemeral,
+      });
       return;
     }
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     if (sub === "check") {
       const user = interaction.options.getUser("user", true);
       const result = await getBooster(user.id, interaction);
+      const member = await discordGuild.members.fetch(user.id).catch(() => null);
+      const isBoostingServer = member?.premiumSince !== null;
+      const avatarUrl =
+        member?.displayAvatarURL({ size: 256 }) ?? user.displayAvatarURL({ size: 256 });
 
-      if (!result?.success || !result.data) {
-        await interaction.editReply({ content: `No booster record found for ${user.tag}.` });
+      if (!result?.success) {
+        await interaction.editReply({ content: "Could not load booster info for this server." });
+        return;
+      }
+
+      if (!result.data) {
+        if (isBoostingServer && member && member.premiumSince) {
+          const discordBoost = `🟢 Boosting since <t:${Math.floor(member.premiumSince.getTime() / 1000)}:D>`;
+          const embed = new EmbedBuilder()
+            .setColor(0xff73fa)
+            .setTitle(`Here is the Booster Information for ${user.id}!`)
+            .setThumbnail(avatarUrl)
+            .addFields(
+              { name: "Status", value: "🟢 Active (Nitro Boost)", inline: true },
+              { name: "Discord boost", value: discordBoost, inline: true },
+              { name: "Custom Role", value: "None", inline: true }
+            )
+            .setTimestamp();
+
+          await interaction.editReply({ embeds: [embed] });
+          return;
+        }
+
+        const container = new ContainerBuilder()
+          .setAccentColor(0xe642a4)
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent("**Uh oh!**"),
+            new TextDisplayBuilder().setContent(`It looks like ${user} is not a Booster.`)
+          );
+
+        await interaction.editReply({
+          flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
+          components: [container],
+        });
         return;
       }
 
@@ -89,16 +129,14 @@ const boosterCommand: Command = {
       const embed = new EmbedBuilder()
         .setColor(booster.active ? 0xf47fff : 0x99aab5)
         .setTitle(`Booster Info: ${user.username}`)
+        .setThumbnail(avatarUrl)
         .addFields(
           { name: "Status", value: booster.active ? "🟢 Active" : "🔴 Inactive", inline: true },
-          { name: "Boost Count", value: String(booster.boostCounts ?? 0), inline: true },
           {
             name: "Custom Role",
             value: booster.customRole ? `<@&${booster.customRole.discordRoleId}>` : "None",
             inline: true,
-          },
-          { name: "First Boosted", value: `<t:${Math.floor(booster.boostedAt.getTime() / 1000)}:D>`, inline: true },
-          { name: "Last Updated", value: `<t:${Math.floor(booster.updatedAt.getTime() / 1000)}:R>`, inline: true }
+          }
         )
         .setTimestamp();
 
@@ -110,6 +148,14 @@ const boosterCommand: Command = {
       const user = interaction.options.getUser("user", true);
       const amount = interaction.options.getInteger("amount", true);
 
+      const targetMember = await discordGuild.members.fetch(user.id).catch(() => null);
+      if (!targetMember?.premiumSince) {
+        await interaction.editReply({
+          content: `${user} is not currently boosting this server with Nitro, so boosts can't be added for them.`,
+        });
+        return;
+      }
+
       await registerBoost(user.id, discordGuild.id, discordGuild.name, discordGuild.iconURL());
 
       const updated = await addBoostCount(user.id, discordGuild.id, amount);
@@ -118,8 +164,22 @@ const boosterCommand: Command = {
         return;
       }
 
+      const boostWord = amount === 1 ? "boost" : "boosts";
+      const countWord = updated.boostCounts === 1 ? "boost" : "boosts";
+      const container = new ContainerBuilder()
+        .setAccentColor(0xe642a4)
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `**Boost successfully added!**`
+          ),
+          new TextDisplayBuilder().setContent(
+            `We've successfully added ${amount} ${boostWord} to ${user}'s profile.`
+          )
+        );
+
       await interaction.editReply({
-        content: `Added **${amount}** boost(s) to ${user.tag}. New count: **${updated.boostCounts}**.`,
+        flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
+        components: [container],
       });
       return;
     }

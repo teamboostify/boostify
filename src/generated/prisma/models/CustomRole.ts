@@ -28,6 +28,8 @@ export type CustomRoleMinAggregateOutputType = {
   id: string | null
   boosterId: string | null
   discordRoleId: string | null
+  name: string | null
+  deleteScheduledAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -36,6 +38,8 @@ export type CustomRoleMaxAggregateOutputType = {
   id: string | null
   boosterId: string | null
   discordRoleId: string | null
+  name: string | null
+  deleteScheduledAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -44,6 +48,8 @@ export type CustomRoleCountAggregateOutputType = {
   id: number
   boosterId: number
   discordRoleId: number
+  name: number
+  deleteScheduledAt: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -54,6 +60,8 @@ export type CustomRoleMinAggregateInputType = {
   id?: true
   boosterId?: true
   discordRoleId?: true
+  name?: true
+  deleteScheduledAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -62,6 +70,8 @@ export type CustomRoleMaxAggregateInputType = {
   id?: true
   boosterId?: true
   discordRoleId?: true
+  name?: true
+  deleteScheduledAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -70,6 +80,8 @@ export type CustomRoleCountAggregateInputType = {
   id?: true
   boosterId?: true
   discordRoleId?: true
+  name?: true
+  deleteScheduledAt?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -151,6 +163,8 @@ export type CustomRoleGroupByOutputType = {
   id: string
   boosterId: string
   discordRoleId: string
+  name: string
+  deleteScheduledAt: Date | null
   createdAt: Date
   updatedAt: Date
   _count: CustomRoleCountAggregateOutputType | null
@@ -180,6 +194,8 @@ export type CustomRoleWhereInput = {
   id?: Prisma.StringFilter<"CustomRole"> | string
   boosterId?: Prisma.StringFilter<"CustomRole"> | string
   discordRoleId?: Prisma.StringFilter<"CustomRole"> | string
+  name?: Prisma.StringFilter<"CustomRole"> | string
+  deleteScheduledAt?: Prisma.DateTimeNullableFilter<"CustomRole"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"CustomRole"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"CustomRole"> | Date | string
   booster?: Prisma.XOR<Prisma.BoosterScalarRelationFilter, Prisma.BoosterWhereInput>
@@ -189,6 +205,8 @@ export type CustomRoleOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   boosterId?: Prisma.SortOrder
   discordRoleId?: Prisma.SortOrder
+  name?: Prisma.SortOrder
+  deleteScheduledAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   booster?: Prisma.BoosterOrderByWithRelationInput
@@ -201,6 +219,8 @@ export type CustomRoleWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.CustomRoleWhereInput | Prisma.CustomRoleWhereInput[]
   OR?: Prisma.CustomRoleWhereInput[]
   NOT?: Prisma.CustomRoleWhereInput | Prisma.CustomRoleWhereInput[]
+  name?: Prisma.StringFilter<"CustomRole"> | string
+  deleteScheduledAt?: Prisma.DateTimeNullableFilter<"CustomRole"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"CustomRole"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"CustomRole"> | Date | string
   booster?: Prisma.XOR<Prisma.BoosterScalarRelationFilter, Prisma.BoosterWhereInput>
@@ -210,6 +230,8 @@ export type CustomRoleOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   boosterId?: Prisma.SortOrder
   discordRoleId?: Prisma.SortOrder
+  name?: Prisma.SortOrder
+  deleteScheduledAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.CustomRoleCountOrderByAggregateInput
@@ -224,6 +246,8 @@ export type CustomRoleScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"CustomRole"> | string
   boosterId?: Prisma.StringWithAggregatesFilter<"CustomRole"> | string
   discordRoleId?: Prisma.StringWithAggregatesFilter<"CustomRole"> | string
+  name?: Prisma.StringWithAggregatesFilter<"CustomRole"> | string
+  deleteScheduledAt?: Prisma.DateTimeNullableWithAggregatesFilter<"CustomRole"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"CustomRole"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"CustomRole"> | Date | string
 }
@@ -231,6 +255,8 @@ export type CustomRoleScalarWhereWithAggregatesInput = {
 export type CustomRoleCreateInput = {
   id?: string
   discordRoleId: string
+  name?: string
+  deleteScheduledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   booster: Prisma.BoosterCreateNestedOneWithoutCustomRoleInput
@@ -240,6 +266,8 @@ export type CustomRoleUncheckedCreateInput = {
   id?: string
   boosterId: string
   discordRoleId: string
+  name?: string
+  deleteScheduledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -247,6 +275,8 @@ export type CustomRoleUncheckedCreateInput = {
 export type CustomRoleUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   discordRoleId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  deleteScheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   booster?: Prisma.BoosterUpdateOneRequiredWithoutCustomRoleNestedInput
@@ -256,6 +286,8 @@ export type CustomRoleUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   boosterId?: Prisma.StringFieldUpdateOperationsInput | string
   discordRoleId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  deleteScheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -264,6 +296,8 @@ export type CustomRoleCreateManyInput = {
   id?: string
   boosterId: string
   discordRoleId: string
+  name?: string
+  deleteScheduledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -271,6 +305,8 @@ export type CustomRoleCreateManyInput = {
 export type CustomRoleUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   discordRoleId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  deleteScheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -279,6 +315,8 @@ export type CustomRoleUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   boosterId?: Prisma.StringFieldUpdateOperationsInput | string
   discordRoleId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  deleteScheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -292,6 +330,8 @@ export type CustomRoleCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   boosterId?: Prisma.SortOrder
   discordRoleId?: Prisma.SortOrder
+  name?: Prisma.SortOrder
+  deleteScheduledAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -300,6 +340,8 @@ export type CustomRoleMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   boosterId?: Prisma.SortOrder
   discordRoleId?: Prisma.SortOrder
+  name?: Prisma.SortOrder
+  deleteScheduledAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -308,6 +350,8 @@ export type CustomRoleMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   boosterId?: Prisma.SortOrder
   discordRoleId?: Prisma.SortOrder
+  name?: Prisma.SortOrder
+  deleteScheduledAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -347,6 +391,8 @@ export type CustomRoleUncheckedUpdateOneWithoutBoosterNestedInput = {
 export type CustomRoleCreateWithoutBoosterInput = {
   id?: string
   discordRoleId: string
+  name?: string
+  deleteScheduledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -354,6 +400,8 @@ export type CustomRoleCreateWithoutBoosterInput = {
 export type CustomRoleUncheckedCreateWithoutBoosterInput = {
   id?: string
   discordRoleId: string
+  name?: string
+  deleteScheduledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -377,6 +425,8 @@ export type CustomRoleUpdateToOneWithWhereWithoutBoosterInput = {
 export type CustomRoleUpdateWithoutBoosterInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   discordRoleId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  deleteScheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -384,6 +434,8 @@ export type CustomRoleUpdateWithoutBoosterInput = {
 export type CustomRoleUncheckedUpdateWithoutBoosterInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   discordRoleId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  deleteScheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -394,6 +446,8 @@ export type CustomRoleSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   id?: boolean
   boosterId?: boolean
   discordRoleId?: boolean
+  name?: boolean
+  deleteScheduledAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   booster?: boolean | Prisma.BoosterDefaultArgs<ExtArgs>
@@ -403,6 +457,8 @@ export type CustomRoleSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   id?: boolean
   boosterId?: boolean
   discordRoleId?: boolean
+  name?: boolean
+  deleteScheduledAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   booster?: boolean | Prisma.BoosterDefaultArgs<ExtArgs>
@@ -412,6 +468,8 @@ export type CustomRoleSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   id?: boolean
   boosterId?: boolean
   discordRoleId?: boolean
+  name?: boolean
+  deleteScheduledAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   booster?: boolean | Prisma.BoosterDefaultArgs<ExtArgs>
@@ -421,11 +479,13 @@ export type CustomRoleSelectScalar = {
   id?: boolean
   boosterId?: boolean
   discordRoleId?: boolean
+  name?: boolean
+  deleteScheduledAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type CustomRoleOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "boosterId" | "discordRoleId" | "createdAt" | "updatedAt", ExtArgs["result"]["customRole"]>
+export type CustomRoleOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "boosterId" | "discordRoleId" | "name" | "deleteScheduledAt" | "createdAt" | "updatedAt", ExtArgs["result"]["customRole"]>
 export type CustomRoleInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   booster?: boolean | Prisma.BoosterDefaultArgs<ExtArgs>
 }
@@ -445,6 +505,8 @@ export type $CustomRolePayload<ExtArgs extends runtime.Types.Extensions.Internal
     id: string
     boosterId: string
     discordRoleId: string
+    name: string
+    deleteScheduledAt: Date | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["customRole"]>
@@ -874,6 +936,8 @@ export interface CustomRoleFieldRefs {
   readonly id: Prisma.FieldRef<"CustomRole", 'String'>
   readonly boosterId: Prisma.FieldRef<"CustomRole", 'String'>
   readonly discordRoleId: Prisma.FieldRef<"CustomRole", 'String'>
+  readonly name: Prisma.FieldRef<"CustomRole", 'String'>
+  readonly deleteScheduledAt: Prisma.FieldRef<"CustomRole", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"CustomRole", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"CustomRole", 'DateTime'>
 }

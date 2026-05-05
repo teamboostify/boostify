@@ -37,10 +37,8 @@ for (const file of commandFiles) {
   const command = (await import(pathToFileURL(filePath).href)).default;
   if (command != undefined && Object.keys(command).length !== 0) {
     client.commands.set(command.data.name, command);
-    // console.log(chalk.green(`✓ Loaded command ${file.replace(/\.[jt]s$/, '')}`));
     logger.startup(`Loaded command ${file.replace(/\.[jt]s$/, '')}`);
   } else {
-    // console.log(chalk.yellow(`Couldn't load command ${file.replace(/\.[jt]s$/, '')}`));
     logger.warn(`Couldn't load command ${file.replace(/\.[jt]s$/, '')}`);
   }
 }
@@ -56,7 +54,6 @@ for (const file of eventFiles) {
   } else {
     client.on(name, (...args) => execute(client, ...args));
   }
-  // console.log(chalk.green(`✓ Loaded event ${file.replace(/\.[jt]s$/, '')}`));
   logger.startup(`Loaded event ${file.replace(/\.[jt]s$/, '')}`);
 }
 

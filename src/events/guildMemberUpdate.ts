@@ -1,22 +1,20 @@
-import { EmbedBuilder, Events, GuildMember, TextChannel } from "discord.js";
-import { Config } from "../libs/loadVariables.js";
-import { registerBoost, removeBoost } from "../services/boosterService.js";
+import { Client, EmbedBuilder, Events, GuildMember, TextChannel } from "discord.js";
+import { loadVariables } from "../libs/loadVariables.js";
 import {
-  assignBoosterRole,
-  removeBoosterRole,
+  registerBoost,
+  removeBoost,
+  scheduleCustomRoleDeletionAfterGrace,
+  clearPendingCustomRoleDeletion,
+} from "../services/boosterService.js";
+import {
   assignLevelRoles,
   removeAllLevelRoles,
-  deleteCustomRole,
 } from "../services/roleService.js";
 import { logger } from "../libs/logger.js";
 
 export default {
   name: Events.GuildMemberUpdate,
-  async execute(
-    oldMember: GuildMember,
-    newMember: GuildMember,
-    config: Config,
-  ) {
+  async execute(_client: Client, oldMember: GuildMember, newMember: GuildMember) {
     try {
       if (oldMember.partial) oldMember = await oldMember.fetch();
       if (newMember.partial) newMember = await newMember.fetch();
@@ -29,17 +27,15 @@ export default {
     const isBoostingNow = newMember.premiumSince !== null;
 
     if (!wasBoostingBefore && isBoostingNow) {
-      await onBoostStart(newMember, config);
+      await onBoostStart(newMember);
     } else if (wasBoostingBefore && !isBoostingNow) {
-      await onBoostEnd(newMember, config);
+      await onBoostEnd(newMember);
     }
   },
 };
 
-async function onBoostStart(
-  member: GuildMember,
-  config: Config,
-): Promise<void> {
+async function onBoostStart(member: GuildMember): Promise<void> {
+  const config = loadVariables();
   const guild = member.guild;
 
   const record = await registerBoost(
@@ -51,7 +47,7 @@ async function onBoostStart(
 
   if (!record) return;
 
-  await assignBoosterRole(member, config);
+  await clearPendingCustomRoleDeletion(record.id);
   await assignLevelRoles(member, record.boostCounts ?? 1);
 
   const greetChannel = guild.channels.cache.get(config.greetChannelId) as
@@ -104,19 +100,18 @@ async function onBoostStart(
       `Thank you for boosting the server! You now have access to booster perks.`,
     );
   } catch {
-    // DMs may be closed
   }
 }
 
-async function onBoostEnd(member: GuildMember, config: Config): Promise<void> {
+async function onBoostEnd(member: GuildMember): Promise<void> {
+  const config = loadVariables();
   const guild = member.guild;
 
   const result = await removeBoost(member.id, guild.id);
   if (!result) return;
 
-  await removeBoosterRole(member, config);
   await removeAllLevelRoles(member);
-  await deleteCustomRole(guild, member.id);
+  await scheduleCustomRoleDeletionAfterGrace(member.id, guild.id);
 
   const logChannel = guild.channels.cache.get(config.logChannelId) as
     | TextChannel

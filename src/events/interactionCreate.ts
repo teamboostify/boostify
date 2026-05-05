@@ -1,4 +1,4 @@
-import { Events, Interaction, InteractionType, Client } from "discord.js";
+import { Events, Interaction, InteractionType, Client, MessageFlags } from "discord.js";
 
 export default {
   name: Events.InteractionCreate,
@@ -20,7 +20,7 @@ export default {
 
       const msg = {
         content: "Something went wrong.",
-        ephemeral: true
+        flags: MessageFlags.Ephemeral,
       };
 
       if (interaction.replied || interaction.deferred) {
