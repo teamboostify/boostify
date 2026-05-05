@@ -23,7 +23,7 @@ const reloadCommand: Command = {
       const config = loadVariables();
       const client = interaction.client as Client & { commands?: Collection<string, Command> };
 
-      await loadCommands(client, config.clientId, config.guildId, config.botToken);
+      await loadCommands(client, config.clientId, config.botToken, config.guildId);
 
       await interaction.editReply("Commands reloaded successfully.");
     } catch (error) {
