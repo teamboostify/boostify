@@ -1,4 +1,11 @@
-import { Events, Interaction, InteractionType, Client, MessageFlags } from "discord.js";
+import {
+  Events,
+  Interaction,
+  InteractionType,
+  Client,
+  MessageFlags,
+  type InteractionReplyOptions,
+} from "discord.js";
 
 export default {
   name: Events.InteractionCreate,
@@ -18,9 +25,11 @@ export default {
     } catch (err) {
       console.error(err);
 
-      const msg = {
+      const flags = MessageFlags.Ephemeral as InteractionReplyOptions["flags"];
+
+      const msg: InteractionReplyOptions = {
         content: "Something went wrong.",
-        flags: MessageFlags.Ephemeral,
+        flags,
       };
 
       if (interaction.replied || interaction.deferred) {
