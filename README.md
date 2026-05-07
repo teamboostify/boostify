@@ -9,7 +9,7 @@
     <img src="https://img.shields.io/github/checks-status/teamboostify/boostify/main?style=flat-square&color=FF47B5" /><br />
     <img src="https://img.shields.io/github/stars/teamboostify/boostify?style=flat-square&color=FF47B5" />
     <a href="https://discord.gg/vZgeWhZ9aF">
-        <img src="https://img.shields.io/discord/1453868977720922287?style=flat-square&logo=discord&logoColor=white&label=Support Server&color=7289da" />
+        <img src="https://img.shields.io/discord/1453868977720922287?style=flat-square&logo=Discord&logoColor=white&label=Support%20Server&color=7289da" />
     </a>
 </div>
 
