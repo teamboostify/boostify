@@ -1,5 +1,5 @@
+import "../libs/loadVariables.js"
 import { Client, EmbedBuilder, Events, GuildMember, TextChannel } from "discord.js";
-import { loadVariables } from "../libs/loadVariables.js";
 import {
   registerBoost,
   removeBoost,
@@ -35,7 +35,6 @@ export default {
 };
 
 async function onBoostStart(member: GuildMember): Promise<void> {
-  const config = loadVariables();
   const guild = member.guild;
 
   const record = await registerBoost(
@@ -50,7 +49,7 @@ async function onBoostStart(member: GuildMember): Promise<void> {
   await clearPendingCustomRoleDeletion(record.id);
   await assignLevelRoles(member, record.boostCounts ?? 1);
 
-  const greetChannel = guild.channels.cache.get(config.greetChannelId) as
+  const greetChannel = guild.channels.cache.get(process.env.GREET_CHANNEL_ID) as
     | TextChannel
     | undefined;
   if (greetChannel) {
@@ -71,7 +70,7 @@ async function onBoostStart(member: GuildMember): Promise<void> {
     await greetChannel.send({ embeds: [embed] });
   }
 
-  const logChannel = guild.channels.cache.get(config.logChannelId) as
+  const logChannel = guild.channels.cache.get(process.env.GREET_CHANNEL_ID) as
     | TextChannel
     | undefined;
   if (logChannel) {
@@ -104,7 +103,6 @@ async function onBoostStart(member: GuildMember): Promise<void> {
 }
 
 async function onBoostEnd(member: GuildMember): Promise<void> {
-  const config = loadVariables();
   const guild = member.guild;
 
   const result = await removeBoost(member.id, guild.id);
@@ -113,7 +111,7 @@ async function onBoostEnd(member: GuildMember): Promise<void> {
   await removeAllLevelRoles(member);
   await scheduleCustomRoleDeletionAfterGrace(member.id, guild.id);
 
-  const logChannel = guild.channels.cache.get(config.logChannelId) as
+  const logChannel = guild.channels.cache.get(process.env.LOG_CHANNEL_ID) as
     | TextChannel
     | undefined;
   if (logChannel) {

@@ -1,3 +1,4 @@
+import "./libs/loadVariables.js"
 import {
   Client,
   GatewayIntentBits,
@@ -5,7 +6,6 @@ import {
   Collection
 } from "discord.js";
 import * as dotenv from "dotenv/config";
-import { loadVariables } from "./libs/loadVariables.js";
 import { Command, loadCommands } from "./libs/loadCommands.js";
 import path from "path";
 import fs from 'fs';
@@ -15,8 +15,6 @@ import { logger } from "./libs/logger.js";
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 dotenv;
-
-const config = loadVariables();
 
 const client = new Client({
   intents: [
@@ -57,10 +55,10 @@ for (const file of eventFiles) {
   logger.startup(`Loaded event ${file.replace(/\.[jt]s$/, '')}`);
 }
 
-await loadCommands(client, config.clientId, config.botToken, config.guildId)
+await loadCommands(client, process.env.CLIENT_ID, process.env.BOT_TOKEN, process.env.GUILD_ID);
 
 try {
-  client.login(config.botToken);
+  client.login(process.env.BOT_TOKEN);
 } catch (err) {
   console.log(err)
 }

@@ -1,30 +1,28 @@
+import { z } from "zod";
 import { logger } from "./logger.js";
 
-export interface Config {
-  botToken: string;
-  clientId: string;
-  guildId: string | undefined;
-  greetChannelId: string;
-  logChannelId: string;
-  databaseUrl: string;
-}
+const envSchema = z.object({
+  BOT_TOKEN: z.string().min(1),
+  CLIENT_ID: z.string().min(1),
+  GUILD_ID: z.string().optional(),
+  GREET_CHANNEL_ID: z.string().min(1),
+  LOG_CHANNEL_ID: z.string().min(1),
+  DATABASE_URL: z.string().min(1),
+});
 
-function requireEnv(key: string): string {
-  const value = process.env[key];
-  console.log("here")
-  if (!value) {
-    logger.fatal(`Missing required environment variable: ${key}`);
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv extends z.infer<typeof envSchema> {}
   }
-  return value as string;
 }
 
-export function loadVariables(): Config {
-  return {
-    botToken: requireEnv("BOT_TOKEN"),
-    clientId: requireEnv("CLIENT_ID"),
-    guildId: process.env.GUILD_ID?.toString() ?? undefined,
-    greetChannelId: requireEnv("GREET_CHANNEL_ID"),
-    logChannelId: requireEnv("LOG_CHANNEL_ID"),
-    databaseUrl: requireEnv("DATABASE_URL"),
-  };
+const result = envSchema.safeParse(process.env);
+
+if (!result.success) {
+  result.error.issues.forEach((issue) => {
+    logger.fatal(`Missing or invalid env var: ${issue.path.join(".")} — ${issue.message}`);
+  });
+  process.exit(1);
 }
+
+Object.assign(process.env, result.data);

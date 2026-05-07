@@ -1,3 +1,4 @@
+import "../libs/loadVariables.js";
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
@@ -8,7 +9,6 @@ import {
 } from "discord.js";
 import { Command } from "../libs/loadCommands.js";
 import { loadCommands } from "../libs/loadCommands.js";
-import { loadVariables } from "../libs/loadVariables.js";
 
 const reloadCommand: Command = {
   data: new SlashCommandBuilder()
@@ -20,10 +20,9 @@ const reloadCommand: Command = {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
-      const config = loadVariables();
       const client = interaction.client as Client & { commands?: Collection<string, Command> };
 
-      await loadCommands(client, config.clientId, config.botToken, config.guildId);
+      await loadCommands(client, process.env.CLIENT_ID, process.env.BOT_TOKEN, process.env.GUILD_ID);
 
       await interaction.editReply("Commands reloaded successfully.");
     } catch (error) {
