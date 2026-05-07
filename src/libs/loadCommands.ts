@@ -11,6 +11,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { logger } from "./logger.js";
+import chalk from "chalk";
 
 export interface Command {
   data:
@@ -49,8 +50,8 @@ export async function loadCommands(
 
   const rest = new REST().setToken(token);
 
-  if (clientId && guildId) {
-    logger.info("here")
+  if (guildId) {
+    logger.info(`Loading Server (${chalk.grey(guildId)}) commands...`);
     await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
       body: [],
     });
@@ -58,8 +59,9 @@ export async function loadCommands(
     await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
       body: commandData,
     });
-  } else if (clientId) {
-    logger.info("a")
+    logger.info("Completed!");
+  } else {
+    logger.info("Loading Global commands...");
     await rest.put(Routes.applicationCommands(clientId), {
       body: [],
     });
@@ -67,5 +69,6 @@ export async function loadCommands(
     await rest.put(Routes.applicationCommands(clientId), {
       body: commandData,
     });
+    logger.info("Completed");
   }
 }
