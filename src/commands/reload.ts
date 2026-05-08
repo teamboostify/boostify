@@ -1,7 +1,6 @@
 import "../libs/loadVariables.js";
 import {
   SlashCommandBuilder,
-  PermissionFlagsBits,
   MessageFlags,
 } from "discord.js";
 import { loadCommands } from "../libs/loadCommands.js";
@@ -11,8 +10,7 @@ import { client } from "../index.js";
 export default new Command({
   info: new SlashCommandBuilder()
     .setName("reload")
-    .setDescription("Reload all slash commands")
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+    .setDescription("Reload all slash commands"),
   async execute(interaction) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
@@ -25,4 +23,5 @@ export default new Command({
       await interaction.editReply("Failed to reload commands.");
     }
   },
+  requiredPermissions: ["Administrator"]
 })
