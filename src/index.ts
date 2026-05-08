@@ -67,43 +67,45 @@ const commandFiles = fs
   .readdirSync(commandsPath)
   .filter((file) => file.endsWith(".js") || file.endsWith(".ts"));
 
-for (const file of commandFiles) {
-  const filePath = path.join(commandsPath, file);
-  const command = (await import(pathToFileURL(filePath).href)).default;
-  if (command != undefined && Object.keys(command).length !== 0) {
-    client.commands.set(command.data.name, command);
-    logger.startup(`Loaded command ${chalk.bold(file.replace(/\.[jt]s$/, ''))}`);
-  } else {
-    logger.warn(`Couldn't load command ${chalk.bold(file.replace(/\.[jt]s$/, ''))}`);
-  }
-}
-
 const eventsPath = path.join(__dirname, "events");
 const eventFiles = fs
   .readdirSync(eventsPath)
   .filter((file) => file.endsWith(".js") || file.endsWith(".ts"));
 
-for (const file of eventFiles) {
-  const filePath = path.join(eventsPath, file);
-  const { once, name, execute } = (await import(pathToFileURL(filePath).href))
-    .default;
-  if (once) {
-    client.once(name, (...args) => execute(client, ...args));
-  } else {
-    client.on(name, (...args) => execute(client, ...args));
+(async () => {
+  for (const file of commandFiles) {
+    const filePath = path.join(commandsPath, file);
+    const command = (await import(pathToFileURL(filePath).href)).default;
+    if (command != undefined && Object.keys(command).length !== 0) {
+      client.commands!.set(command.data.name, command);
+      logger.startup(`Loaded command ${chalk.bold(file.replace(/\.[jt]s$/, ''))}`);
+    } else {
+      logger.warn(`Couldn't load command ${chalk.bold(file.replace(/\.[jt]s$/, ''))}`);
+    }
   }
-  logger.startup(`Loaded event ${file.replace(/\.[jt]s$/, '')}`);
-}
 
-await loadCommands(
-  client,
-  process.env.CLIENT_ID,
-  process.env.BOT_TOKEN,
-  process.env.GUILD_ID,
-);
+  for (const file of eventFiles) {
+    const filePath = path.join(eventsPath, file);
+    const { once, name, execute } = (await import(pathToFileURL(filePath).href))
+      .default;
+    if (once) {
+      client.once(name, (...args) => execute(client, ...args));
+    } else {
+      client.on(name, (...args) => execute(client, ...args));
+    }
+    logger.startup(`Loaded event ${file.replace(/\.[jt]s$/, '')}`);
+  }
 
-try {
-  client.login(process.env.BOT_TOKEN);
-} catch (err) {
-  console.log(err);
-}
+  await loadCommands(
+    client,
+    process.env.CLIENT_ID,
+    process.env.BOT_TOKEN,
+    process.env.GUILD_ID,
+  );
+
+  try {
+    client.login(process.env.BOT_TOKEN);
+  } catch (err) {
+    console.log(err);
+  }
+})()
