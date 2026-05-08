@@ -1,20 +1,54 @@
-import "./libs/loadVariables.js"
-import {
-  Client,
-  GatewayIntentBits,
-  Partials,
-  Collection
-} from "discord.js";
+import "./libs/loadVariables.js";
+import { Client, GatewayIntentBits, Partials, Collection } from "discord.js";
 import * as dotenv from "dotenv/config";
 import { Command, loadCommands } from "./libs/loadCommands.js";
 import path from "path";
-import fs from 'fs';
+import fs from "fs";
 import { fileURLToPath, pathToFileURL } from "url";
 import { logger } from "./libs/logger.js";
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 dotenv;
+
+process.on("uncaughtException", (error) => {
+  logger.error(
+    JSON.stringify({
+      type: "uncaughtException",
+      message: error.message,
+      stack: error?.stack,
+      cause: error.cause,
+    }),
+  );
+});
+
+process.on("unhandledRejection", (reason) => {
+  const safeStringify = (value: unknown): string => {
+    try {
+      if (value instanceof Error) return value.message;
+      return JSON.stringify(value, null, 2);
+    } catch {
+      try {
+        return String(value);
+      } catch {
+        return "[Unstringifiable rejection]";
+      }
+    }
+  };
+
+  const safeStack = (value: unknown): string => {
+    if (value instanceof Error && value.stack) return value.stack;
+    return "No stack trace available";
+  };
+
+  logger.error(
+    JSON.stringify({
+      type: "unhandledRejection",
+      reason: safeStringify(reason),
+      stack: safeStack(reason),
+    }),
+  );
+});
 
 const client = new Client({
   intents: [
@@ -27,38 +61,48 @@ const client = new Client({
 
 client.commands = new Collection();
 
-const commandsPath = path.join(__dirname, 'commands');
-const commandFiles = fs.readdirSync(commandsPath).filter((file) => file.endsWith('.js') || file.endsWith('.ts'));
+const commandsPath = path.join(__dirname, "commands");
+const commandFiles = fs
+  .readdirSync(commandsPath)
+  .filter((file) => file.endsWith(".js") || file.endsWith(".ts"));
 
 for (const file of commandFiles) {
   const filePath = path.join(commandsPath, file);
   const command = (await import(pathToFileURL(filePath).href)).default;
   if (command != undefined && Object.keys(command).length !== 0) {
     client.commands.set(command.data.name, command);
-    logger.startup(`Loaded command ${file.replace(/\.[jt]s$/, '')}`);
+    logger.startup(`Loaded command ${file.replace(/\.[jt]s$/, "")}`);
   } else {
-    logger.warn(`Couldn't load command ${file.replace(/\.[jt]s$/, '')}`);
+    logger.warn(`Couldn't load command ${file.replace(/\.[jt]s$/, "")}`);
   }
 }
 
-const eventsPath = path.join(__dirname, 'events');
-const eventFiles = fs.readdirSync(eventsPath).filter((file) => file.endsWith('.js') || file.endsWith('.ts'));
+const eventsPath = path.join(__dirname, "events");
+const eventFiles = fs
+  .readdirSync(eventsPath)
+  .filter((file) => file.endsWith(".js") || file.endsWith(".ts"));
 
 for (const file of eventFiles) {
   const filePath = path.join(eventsPath, file);
-  const { once, name, execute } = (await import(pathToFileURL(filePath).href)).default;
+  const { once, name, execute } = (await import(pathToFileURL(filePath).href))
+    .default;
   if (once) {
     client.once(name, (...args) => execute(client, ...args));
   } else {
     client.on(name, (...args) => execute(client, ...args));
   }
-  logger.startup(`Loaded event ${file.replace(/\.[jt]s$/, '')}`);
+  logger.startup(`Loaded event ${file.replace(/\.[jt]s$/, "")}`);
 }
 
-await loadCommands(client, process.env.CLIENT_ID, process.env.BOT_TOKEN, process.env.GUILD_ID);
+await loadCommands(
+  client,
+  process.env.CLIENT_ID,
+  process.env.BOT_TOKEN,
+  process.env.GUILD_ID,
+);
 
 try {
   client.login(process.env.BOT_TOKEN);
 } catch (err) {
-  console.log(err)
+  console.log(err);
 }
