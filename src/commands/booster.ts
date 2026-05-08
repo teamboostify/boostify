@@ -7,7 +7,6 @@ import {
   TextDisplayBuilder,
   MessageFlags,
 } from "discord.js";
-import { Command } from "../libs/loadCommands.js";
 import {
   getBooster,
   addBoostCount,
@@ -17,10 +16,11 @@ import {
   getTotalBoosts,
   registerBoost,
 } from "../services/boosterService.js";
+import { Command } from "../base/classes/command.js";
 
-const boosterCommand: Command = {
-  data: new SlashCommandBuilder()
-    .setName("booster")
+export default new Command({
+  info: new SlashCommandBuilder()
+  .setName("booster")
     .setDescription("Booster management commands")
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addSubcommand((sub) =>
@@ -64,8 +64,7 @@ const boosterCommand: Command = {
     .addSubcommand((sub) =>
       sub.setName("stats").setDescription("View server boost statistics")
     ),
-
-  async execute(interaction: ChatInputCommandInteraction): Promise<void> {
+  async execute(interaction) {
     const sub = interaction.options.getSubcommand();
 
     const discordGuild = interaction.guild;
@@ -221,6 +220,4 @@ const boosterCommand: Command = {
       return;
     }
   },
-};
-
-export default boosterCommand;
+})

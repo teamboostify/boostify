@@ -6,14 +6,13 @@ import {
   ButtonBuilder,
   ButtonStyle,
 } from "discord.js";
-import { Command } from "../libs/loadCommands.js";
+import { Command } from "../base/classes/command.js";
 
-const exampleAllCommand: Command = {
-  data: new SlashCommandBuilder()
+export default new Command({
+  info: new SlashCommandBuilder()
     .setName("example_all")
     .setDescription("[TEMP] Preview all bot messages and embeds"),
-
-  async execute(interaction: ChatInputCommandInteraction): Promise<void> {
+  async execute(interaction) {
     await interaction.deferReply();
 
     // 1. Boost start greet embed
@@ -103,6 +102,4 @@ const exampleAllCommand: Command = {
         "**[6/6] DM sent to booster on boost start:**\n> Thank you for boosting the server! You now have access to booster perks.",
     });
   },
-};
-
-export default exampleAllCommand;
+})

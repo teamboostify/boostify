@@ -6,13 +6,13 @@ import {
   TextDisplayBuilder,
   MessageFlags,
 } from "discord.js";
-import { Command } from "../libs/loadCommands.js";
 import { ensureBoosterWhileBoosting, getBooster } from "../services/boosterService.js";
 import {
   createCustomRole,
   updateCustomRole,
   deleteCustomRole,
 } from "../services/roleService.js";
+import { Command } from "../base/classes/command.js";
 
 const ACCENT = 0xe642a4;
 
@@ -26,8 +26,8 @@ function componentsV2(lines: string[]) {
   };
 }
 
-const roleCommand: Command = {
-  data: new SlashCommandBuilder()
+export default new Command({
+  info: new SlashCommandBuilder()
     .setName("role")
     .setDescription("Manage your custom booster role")
     .addSubcommand((sub) =>
@@ -55,8 +55,7 @@ const roleCommand: Command = {
     .addSubcommand((sub) =>
       sub.setName("delete").setDescription("Delete your custom role")
     ),
-
-  async execute(interaction: ChatInputCommandInteraction): Promise<void> {
+  async execute(interaction) {
     const guild = interaction.guild;
     if (!guild) {
       await interaction.reply(componentsV2(["This command can only be used in a server."]));
@@ -177,6 +176,4 @@ const roleCommand: Command = {
       return;
     }
   },
-};
-
-export default roleCommand;
+})

@@ -6,6 +6,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath, pathToFileURL } from "url";
 import { logger } from "./libs/logger.js";
+import chalk from "chalk";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
@@ -50,7 +51,7 @@ process.on("unhandledRejection", (reason) => {
   );
 });
 
-const client = new Client({
+export const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
@@ -71,9 +72,9 @@ for (const file of commandFiles) {
   const command = (await import(pathToFileURL(filePath).href)).default;
   if (command != undefined && Object.keys(command).length !== 0) {
     client.commands.set(command.data.name, command);
-    logger.startup(`Loaded command ${file.replace(/\.[jt]s$/, "")}`);
+    logger.startup(`Loaded command ${chalk.bold(file.replace(/\.[jt]s$/, ''))}`);
   } else {
-    logger.warn(`Couldn't load command ${file.replace(/\.[jt]s$/, "")}`);
+    logger.warn(`Couldn't load command ${chalk.bold(file.replace(/\.[jt]s$/, ''))}`);
   }
 }
 
@@ -91,7 +92,7 @@ for (const file of eventFiles) {
   } else {
     client.on(name, (...args) => execute(client, ...args));
   }
-  logger.startup(`Loaded event ${file.replace(/\.[jt]s$/, "")}`);
+  logger.startup(`Loaded event ${file.replace(/\.[jt]s$/, '')}`);
 }
 
 await loadCommands(
