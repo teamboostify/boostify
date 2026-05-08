@@ -95,85 +95,85 @@ export default new Command({
 
     const sub = interaction.options.getSubcommand();
 
-    if (sub === "create") {
-      if (boosterRecord.customRole) {
-        await interaction.reply(
-          componentsV2([
-            "You already have a custom role.",
-            "Use `/role edit` to change it.",
-          ])
-        );
-        return;
-      }
+    switch (sub) {
+      case "create": {
+        if (boosterRecord.customRole) {
+          await interaction.reply(
+            componentsV2([
+              "You already have a custom role.",
+              "Use `/role edit` to change it.",
+            ])
+          );
+          return;
+        }
 
-      const name = interaction.options.getString("name", true);
-      const color = interaction.options.getString("color", true);
+        const name = interaction.options.getString("name", true);
+        const color = interaction.options.getString("color", true);
 
-      if (!/^#[0-9a-fA-F]{6}$/.test(color)) {
-        await interaction.reply(
-          componentsV2([
-            "Invalid color.",
-            "Use a hex color like `#ff0000`.",
-          ])
-        );
-        return;
-      }
+        if (!/^#[0-9a-fA-F]{6}$/.test(color)) {
+          await interaction.reply(
+            componentsV2([
+              "Invalid color.",
+              "Use a hex color like `#ff0000`.",
+            ])
+          );
+          return;
+        }
 
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-      const role = await createCustomRole(guild, member, name, color as ColorResolvable);
+        const role = await createCustomRole(guild, member, name, color as ColorResolvable);
 
-      await interaction.editReply(
-        componentsV2([`**Custom role created!**`, `${role} is ready to use.`])
-      );
-      return;
-    }
-
-    if (sub === "edit") {
-      if (!boosterRecord.customRole?.discordRoleId) {
-        await interaction.reply(
-          componentsV2(["You don't have a custom role yet.", "Use `/role create` first."])
-        );
-        return;
-      }
-
-      const name = interaction.options.getString("name") ?? undefined;
-      const color = (interaction.options.getString("color") ?? undefined) as ColorResolvable | undefined;
-
-      if (color && !/^#[0-9a-fA-F]{6}$/.test(color as string)) {
-        await interaction.reply(
-          componentsV2([
-            "Invalid color.",
-            "Use a hex color like `#ff0000`.",
-          ])
-        );
-        return;
-      }
-
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
-      const role = await updateCustomRole(guild, interaction.user.id, name, color);
-      if (!role) {
         await interaction.editReply(
-          componentsV2(["Couldn't update that role.", "It may have been deleted manually."])
+          componentsV2([`**Custom role created!**`, `${role} is ready to use.`])
         );
+        break;
+      }
+      case "edit": {
+        if (!boosterRecord.customRole?.discordRoleId) {
+          await interaction.reply(
+            componentsV2(["You don't have a custom role yet.", "Use `/role create` first."])
+          );
+          return;
+        }
+
+        const name = interaction.options.getString("name") ?? undefined;
+        const color = (interaction.options.getString("color") ?? undefined) as ColorResolvable | undefined;
+
+        if (color && !/^#[0-9a-fA-F]{6}$/.test(color as string)) {
+          await interaction.reply(
+            componentsV2([
+              "Invalid color.",
+              "Use a hex color like `#ff0000`.",
+            ])
+          );
+          return;
+        }
+
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+        const role = await updateCustomRole(guild, interaction.user.id, name, color);
+        if (!role) {
+          await interaction.editReply(
+            componentsV2(["Couldn't update that role.", "It may have been deleted manually."])
+          );
+          return;
+        }
+
+        await interaction.editReply(componentsV2(["**Custom role updated.**"]));
+        break;
+      }
+      case "delete": {
+        if (!boosterRecord.customRole?.discordRoleId) {
+          await interaction.reply(componentsV2(["You don't have a custom role to delete."]));
+          return;
+        }
+
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+        await deleteCustomRole(guild, interaction.user.id);
+        await interaction.editReply(componentsV2(["**Custom role deleted.**"]));
         return;
       }
-
-      await interaction.editReply(componentsV2(["**Custom role updated.**"]));
-      return;
-    }
-
-    if (sub === "delete") {
-      if (!boosterRecord.customRole?.discordRoleId) {
-        await interaction.reply(componentsV2(["You don't have a custom role to delete."]));
-        return;
-      }
-
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-      await deleteCustomRole(guild, interaction.user.id);
-      await interaction.editReply(componentsV2(["**Custom role deleted.**"]));
-      return;
     }
   },
 })
