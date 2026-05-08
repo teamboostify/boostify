@@ -1,6 +1,5 @@
 import {
   SlashCommandBuilder,
-  ChatInputCommandInteraction,
   EmbedBuilder,
   PermissionFlagsBits,
   ContainerBuilder,
