@@ -19,7 +19,6 @@ model Guild {
   iconUrl     String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-
   boosters    Booster[]
 }
 
@@ -52,4 +51,13 @@ model CustomRole {
   updatedAt         DateTime  @updatedAt
 
   @@index([deleteScheduledAt])
+}
+
+model GuildSetting {
+  uid              String    @id @default(cuid())
+  gid              String    @unique
+  greetChannelId   String
+  logChannelId     String
+  createdAt        DateTime @default(now()) // not the time the server was created, rather the time it was setted up at.
+  lastCheckup      DateTime @default(now())
 }
