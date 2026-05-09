@@ -1,0 +1,66 @@
+import { ActivityType, Client, Events } from "discord.js";
+
+function getStatus(guilds: number, users: number) {
+    const statuses = [
+        `Managing ${guilds} servers!`,
+        `Watching over ${users} users 👀`,
+        `Boost, boost, boost! 🚀`,
+        `Keeping communities active ✨`,
+        `Powering Discord servers ⚡`,
+        `Tracking boosts in real-time 📈`,
+        `Helping servers grow 🌱`,
+        `Thanking boosters 24/7 💜`,
+        `Making server management easier 🛠️`,
+        `Serving ${guilds} amazing communities 🎉`,
+        `Keeping the hype alive 🔥`,
+        `Boostify never sleeps 😴`,
+        `Running on caffeine and Node.js ☕`,
+        `Auto-managing booster perks 🎁`,
+        `Boosters deserve the best 💎`,
+        `Syncing rewards like magic ✨`,
+        `Moderating with style 🕶️`,
+        `Open-source and proud 🌍`,
+        `Your server’s best assistant 🤖`,
+        `Made with TypeScript 💙`,
+        `Keeping roles in sync 🔄`,
+        `Boosting experiences daily 🚀`,
+        `Listening to slash commands 🎧`,
+        `Managing chaos professionally 😎`,
+        `Protecting the server vibes 🛡️`,
+        `One boost at a time 💜`,
+        `Currently in ${guilds} servers 🌐`,
+        `Making Discord better ✨`,
+        `discord.js supremacy 👑`,
+        `Hosting the booster revolution 🚀`,
+    ];
+
+    return statuses[Math.floor(Math.random() * statuses.length)];
+}
+
+export default {
+    name: Events.ClientReady,
+    once: true,
+
+    execute(client: Client) {
+        if (!client.user) return;
+
+        const updatePresence = () => {
+            const guilds = client.guilds.cache.size;
+
+            const users = client.guilds.cache.reduce(
+                (acc, guild) => acc + (guild.memberCount || 0),
+                0
+            );
+
+            client.user!.setActivity({
+                type: ActivityType.Custom,
+                name: getStatus(guilds, users),
+            });
+        };
+
+        setTimeout(() => {
+            updatePresence();
+            setInterval(updatePresence, 1000 * 60 * 60);
+        }, 3000);
+    },
+};
