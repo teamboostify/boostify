@@ -50,25 +50,29 @@ export async function loadCommands(
 
   const rest = new REST().setToken(token);
 
-  if (guildId) {
-    logger.info(`Loading Server (${chalk.grey(guildId)}) commands...`);
-    await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
-      body: [],
-    });
+  try {
+    if (guildId) {
+      logger.info(`Loading Server (${chalk.grey(guildId)}) commands...`);
+      await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
+        body: [],
+      });
 
-    await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
-      body: commandData,
-    });
-    logger.info("Completed!");
-  } else {
-    logger.info("Loading Global commands...");
-    await rest.put(Routes.applicationCommands(clientId), {
-      body: [],
-    });
+      await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
+        body: commandData,
+      });
+      logger.info("Completed!");
+    } else {
+      logger.info("Loading Global commands...");
+      await rest.put(Routes.applicationCommands(clientId), {
+        body: [],
+      });
 
-    await rest.put(Routes.applicationCommands(clientId), {
-      body: commandData,
-    });
-    logger.info("Completed");
+      await rest.put(Routes.applicationCommands(clientId), {
+        body: commandData,
+      });
+      logger.info("Completed");
+    }
+  } catch (err) {
+    logger.fatal("An error occured while loading commands", err)
   }
 }
