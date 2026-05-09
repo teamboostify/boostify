@@ -5,8 +5,8 @@ const envSchema = z.object({
   BOT_TOKEN: z.string().min(1),
   CLIENT_ID: z.string().min(1),
   GUILD_ID: z.string().optional(),
-  GREET_CHANNEL_ID: z.string().min(1),
-  LOG_CHANNEL_ID: z.string().min(1),
+  GREET_CHANNEL_ID: z.string().min(1).optional(),
+  LOG_CHANNEL_ID: z.string().min(1).optional(),
   DATABASE_URL: z.string().min(1),
 });
 
