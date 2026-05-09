@@ -230,15 +230,6 @@ Need help?
 
 ---
 
-# Project Status
-
-> [!NOTE]
-> Boostify is currently under active development.
->
-> While the platform is stable for most use-cases, features may change and improve over time. If you encounter issues, please open an issue or join our support server.
-
----
-
 <div align="center">
    Made with ❤️ by Team Boostify
 </div>
