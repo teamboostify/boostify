@@ -100,7 +100,8 @@ export default new Command({
             .addFields(
               { name: "Status", value: "🟢 Active (Nitro Boost)", inline: true },
               { name: "Discord boost", value: discordBoost, inline: true },
-              { name: "Custom Role", value: "None", inline: true }
+              { name: "Custom Role", value: "None", inline: true },
+              { name: "User Ping", value: `<@${user.id}>`}
             )
             .setTimestamp();
 
