@@ -75,7 +75,7 @@ export default new Command({
       return;
     }
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply();
 
     if (sub === "check") {
       const user = interaction.options.getUser("user", true);
