@@ -15,7 +15,7 @@ export default new Command({
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
-      await loadCommands(client, process.env.CLIENT_ID, process.env.BOT_TOKEN, process.env.GUILD_ID);
+      await loadCommands();
 
       await interaction.editReply("Commands reloaded successfully.");
     } catch (error) {
