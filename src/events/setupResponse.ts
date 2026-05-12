@@ -33,7 +33,7 @@ export default {
     });
 
     await interaction.reply({
-      content: `Setup complete!\n- Boost notifications: <${boostChannelId}>\n- Logs: <${logChannelId}>`,
+      content: `Setup complete!\n- Boost notifications: ${boostChannelId}\n- Logs: ${logChannelId}`,
       flags: MessageFlags.Ephemeral,
     });
   }

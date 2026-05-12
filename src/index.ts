@@ -101,12 +101,7 @@ const eventFiles = fs
     logger.startup(`Loaded event ${file.replace(/\.[jt]s$/, '')}`);
   }
 
-  await loadCommands(
-    client,
-    process.env.CLIENT_ID,
-    process.env.BOT_TOKEN,
-    process.env.GUILD_ID,
-  );
+  await loadCommands();
 
   try {
     client.login(process.env.BOT_TOKEN);
