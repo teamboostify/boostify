@@ -40,6 +40,9 @@ export default new Command({
         .addStringOption((opt) =>
           opt.setName("color").setDescription("Hex color (e.g. #ff0000)").setRequired(true)
         )
+        .addStringOption((opt) =>
+          opt.setName("gradient").setDescription("Make your role colors a gradient.")
+        )
     )
     .addSubcommand((sub) =>
       sub
@@ -109,6 +112,7 @@ export default new Command({
 
         const name = interaction.options.getString("name", true);
         const color = interaction.options.getString("color", true);
+        const gradient = interaction.options.getString("gradient")
 
         if (!/^#[0-9a-fA-F]{6}$/.test(color)) {
           await interaction.reply(
@@ -122,7 +126,7 @@ export default new Command({
 
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-        const role = await createCustomRole(guild, member, name, color as ColorResolvable);
+        const role = await createCustomRole(guild, member, name, color as ColorResolvable, gradient as ColorResolvable);
 
         await interaction.editReply(
           componentsV2([`**Custom role created!**`, `${role} is ready to use.`])

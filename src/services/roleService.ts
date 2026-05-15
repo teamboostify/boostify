@@ -64,11 +64,12 @@ export async function createCustomRole(
   guild: Guild,
   member: GuildMember,
   name: string,
-  color: ColorResolvable
+  color: ColorResolvable,
+  gradientColor: ColorResolvable
 ): Promise<Role> {
   const role = await guild.roles.create({
     name,
-    colors: { primaryColor: resolveColor(color) },
+    colors: { primaryColor: resolveColor(color), secondaryColor: resolveColor(gradientColor) },
     permissions: [],
   });
 
