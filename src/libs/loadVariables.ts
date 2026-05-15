@@ -8,6 +8,7 @@ const envSchema = z.object({
   GREET_CHANNEL_ID: z.string().min(1).optional(),
   LOG_CHANNEL_ID: z.string().min(1).optional(),
   DATABASE_URL: z.string().min(1),
+  MASTER_GUILD: z.string().optional()
 });
 
 declare global {

@@ -21,6 +21,7 @@ interface CommandOptions {
   ownerOnly?: boolean;
   requiredPermissions?: (keyof typeof PermissionFlagsBits)[];
   cooldown?: number;
+  masterLock?: boolean
 }
 
 export class Command {
@@ -30,15 +31,17 @@ export class Command {
   ownerOnly: boolean;
   requiredPermissions: (keyof typeof PermissionFlagsBits)[];
   cooldown: number;
+  masterLock: boolean
   private _cooldowns: Map<string, number>;
 
-  constructor({ info, execute, guildOnly = false, ownerOnly = false, requiredPermissions = [], cooldown = 0 }: CommandOptions) {
+  constructor({ info, execute, guildOnly = false, ownerOnly = false, requiredPermissions = [], cooldown = 0, masterLock = false }: CommandOptions) {
     this.data = info;
     this.execute = execute;
     this.guildOnly = guildOnly;
     this.ownerOnly = ownerOnly;
     this.requiredPermissions = requiredPermissions;
     this.cooldown = cooldown;
+    this.masterLock = masterLock;
     this._cooldowns = new Map();
   }
 
@@ -56,6 +59,12 @@ export class Command {
       await interaction.reply({ content: 'Only the owner can run this command', flags: MessageFlags.Ephemeral });
       return;
     }
+
+    if (this.masterLock && interaction.guild) {
+      if (interaction.guild.id != process.env.MASTER_GUILD) {
+        await interaction.reply('This command cannot be ran in this server.')
+      }
+    } 
 
     if (this.requiredPermissions.length && interaction.guild) {
       const missing = this.requiredPermissions.filter(

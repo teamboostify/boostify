@@ -130,6 +130,7 @@ GUILD_ID=
 
 GREET_CHANNEL_ID=
 LOG_CHANNEL_ID=
+MASTER_GUILD=
 
 DATABASE_URL=postgresql://user:password@localhost:5432/boostify
 ```

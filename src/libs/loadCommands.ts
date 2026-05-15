@@ -54,6 +54,13 @@ export async function loadCommands(): Promise<void> {
       continue;
     }
 
+    if (command?.masterLock) {
+      if (!process.env.MASTER_GUILD) {
+        logger.warn(`Skipping ${file} - missing ${chalk.bold('MASTER_GUILD')} on environmental variables.`);
+        continue;
+      }
+    }
+
     client.commands.set(command.data.name, command);
     commandData.push(command.data.toJSON());
   }

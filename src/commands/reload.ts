@@ -5,7 +5,6 @@ import {
 } from "discord.js";
 import { loadCommands } from "../libs/loadCommands.js";
 import { Command } from "../base/classes/command.js";
-import { client } from "../index.js";
 
 export default new Command({
   info: new SlashCommandBuilder()
@@ -23,5 +22,6 @@ export default new Command({
       await interaction.editReply("Failed to reload commands.");
     }
   },
-  requiredPermissions: ["Administrator"]
+  requiredPermissions: ["Administrator"],
+  masterLock: true
 })
