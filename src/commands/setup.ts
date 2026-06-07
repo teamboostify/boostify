@@ -6,9 +6,9 @@ import {
   MessageFlags,
   ContainerBuilder,
 } from "discord.js";
-import { Command } from "#/base/classes/command.js";
-import { prisma } from "#/libs/database.js";
-import { SystemColors } from "#/libs/colors.js";
+import { Command } from "../base/classes/command.js";
+import { prisma } from "../libs/database.js";
+import { SystemColors } from "../libs/colors.js";
 
 export default new Command({
   info: new SlashCommandBuilder()

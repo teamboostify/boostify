@@ -14,8 +14,8 @@ import {
   getActiveBoosters,
   getTotalBoosts,
   registerBoost,
-} from "#/services/boosterService.js";
-import { Command } from "#/base/classes/command.js";
+} from "../services/boosterService.js";
+import { Command } from "../base/classes/command.js";
 
 export default new Command({
   info: new SlashCommandBuilder()

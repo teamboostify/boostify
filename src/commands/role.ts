@@ -5,13 +5,13 @@ import {
   TextDisplayBuilder,
   MessageFlags,
 } from "discord.js";
-import { ensureBoosterWhileBoosting, getBooster } from "#/services/boosterService.js";
+import { ensureBoosterWhileBoosting, getBooster } from "../services/boosterService.js";
 import {
   createCustomRole,
   updateCustomRole,
   deleteCustomRole,
-} from "#/services/roleService.js";
-import { Command } from "#/base/classes/command.js";
+} from "../services/roleService.js";
+import { Command } from "../base/classes/command.js";
 
 const ACCENT = 0xe642a4;
 

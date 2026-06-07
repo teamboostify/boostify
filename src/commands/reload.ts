@@ -1,10 +1,10 @@
-import "#/libs/loadVariables.js";
+import "../libs/loadVariables.js";
 import {
   SlashCommandBuilder,
   MessageFlags,
 } from "discord.js";
-import { loadCommands } from "#/libs/loadCommands.js";
-import { Command } from "#/base/classes/command.js";
+import { loadCommands } from "../libs/loadCommands.js";
+import { Command } from "../base/classes/command.js";
 
 export default new Command({
   info: new SlashCommandBuilder()

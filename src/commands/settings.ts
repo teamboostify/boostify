@@ -4,7 +4,7 @@ import {
   ChannelType,
   LabelBuilder,
 } from "discord.js";
-import { Command } from "#/base/classes/command.js";
+import { Command } from "../base/classes/command.js";
 
 export default new Command({
   info: new SlashCommandBuilder()

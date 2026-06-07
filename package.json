@@ -31,9 +31,5 @@
     "pg": "^8.20.0",
     "tsx": "^4.21.0",
     "zod": "^4.4.3"
-  },
-  "imports": {
-    "#/*": ["./dist/*"],
-    "#database": ["./dist/libs/database.js"]
   }
 }

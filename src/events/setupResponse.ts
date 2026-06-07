@@ -6,8 +6,8 @@ import {
   Interaction,
   MessageFlags
 } from "discord.js";
-import { prisma } from "#database";
-import { SystemColors } from "#/libs/colors.js";
+import { prisma } from "../libs/database.js";
+import { SystemColors } from "../libs/colors.js";
 
 export default {
   name: Events.InteractionCreate,
