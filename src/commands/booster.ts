@@ -14,8 +14,8 @@ import {
   getActiveBoosters,
   getTotalBoosts,
   registerBoost,
-} from "../services/boosterService.js";
-import { Command } from "../base/classes/command.js";
+} from "#/services/boosterService.js";
+import { Command } from "#/base/classes/command.js";
 
 export default new Command({
   info: new SlashCommandBuilder()
@@ -164,7 +164,6 @@ export default new Command({
       }
 
       const boostWord = amount === 1 ? "boost" : "boosts";
-      const countWord = updated.boostCounts === 1 ? "boost" : "boosts";
       const container = new ContainerBuilder()
         .setAccentColor(0xe642a4)
         .addTextDisplayComponents(

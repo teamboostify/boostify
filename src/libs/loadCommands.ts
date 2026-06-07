@@ -81,6 +81,12 @@ export async function loadCommands(): Promise<void> {
         Routes.applicationCommands(process.env.CLIENT_ID!),
         { body: commandData }
       );
+      if (process.env.MASTER_GUILD) {
+        await rest.put(
+          Routes.applicationGuildCommands(process.env.CLIENT_ID!, process.env.MASTER_GUILD),
+          { body: commandData.filter((command) => command.name == "reload" )} // load the reload command for the master guild, even if the bot service is public
+        )
+      }
     }
     logger.info("Completed!");
   } catch (err) {

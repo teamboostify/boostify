@@ -1,4 +1,4 @@
-import "../libs/loadVariables.js";
+import "#/libs/loadVariables.js";
 import {
   Client,
   EmbedBuilder,
@@ -11,13 +11,13 @@ import {
   removeBoost,
   scheduleCustomRoleDeletionAfterGrace,
   clearPendingCustomRoleDeletion,
-} from "../services/boosterService.js";
+} from "#/services/boosterService.js";
 import {
   assignLevelRoles,
   removeAllLevelRoles,
-} from "../services/roleService.js";
-import { logger } from "../libs/logger.js";
-import { prisma } from "../libs/database.js";
+} from "#/services/roleService.js";
+import { logger } from "#/libs/logger.js";
+import { prisma } from "#database";
 
 export default {
   name: Events.GuildMemberUpdate,

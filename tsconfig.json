@@ -12,7 +12,11 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "declaration": false,
-    "sourceMap": true
+    "sourceMap": true,
+    "paths": {
+      "#/*" : ["./src/*"],
+      "#database": ["./src/libs/database.ts"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["**/*.map", "node_modules", "dist"]
