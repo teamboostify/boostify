@@ -1,5 +1,4 @@
 import {
-  Client,
   Collection,
   REST,
   Routes,
@@ -36,7 +35,7 @@ export async function loadCommands(): Promise<void> {
 
   const commandFiles = fs
     .readdirSync(commandsPath)
-    .filter((file) => file.endsWith(".ts") || file.endsWith(".js"));
+    .filter((file) => file.endsWith(".ts") || !file.endsWith("test.ts") ||file.endsWith(".js") || !file.endsWith("test.js"));
 
   if (commandFiles.length === 0) {
     logger.warn("No command files found — nothing to register.");

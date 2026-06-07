@@ -1,10 +1,6 @@
 import {
   SlashCommandBuilder,
-  ChatInputCommandInteraction,
   EmbedBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
 } from "discord.js";
 import { Command } from "../base/classes/command.js";
 

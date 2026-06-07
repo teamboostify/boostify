@@ -1,5 +1,11 @@
-import "../libs/loadVariables.js"
-import { Client, EmbedBuilder, Events, GuildMember, TextChannel } from "discord.js";
+import "../libs/loadVariables.js";
+import {
+  Client,
+  EmbedBuilder,
+  Events,
+  GuildMember,
+  TextChannel,
+} from "discord.js";
 import {
   registerBoost,
   removeBoost,
@@ -15,12 +21,19 @@ import { prisma } from "../libs/database.js";
 
 export default {
   name: Events.GuildMemberUpdate,
-  async execute(_client: Client, oldMember: GuildMember, newMember: GuildMember) {
+  async execute(
+    _client: Client,
+    oldMember: GuildMember,
+    newMember: GuildMember,
+  ) {
     try {
       if (oldMember.partial) oldMember = await oldMember.fetch();
       if (newMember.partial) newMember = await newMember.fetch();
     } catch (error) {
-      logger.error(`Failed to fetch partials for user ${oldMember.user.username}`);
+      const username =
+        oldMember?.user?.username ?? oldMember?.id ?? "Unknown user";
+      logger.error(`Failed to fetch partials for user ${username}`);
+      return;
     }
 
     const wasBoostingBefore = oldMember.premiumSince !== null;
@@ -43,7 +56,9 @@ async function onBoostStart(member: GuildMember): Promise<void> {
 
   const settings = await getGuildSettings(guild.id);
   if (!settings) {
-    logger.error(`No guild settings found for guild ${guild.id} — run /setup first.`);
+    logger.error(
+      `No guild settings found for guild ${guild.id} — run /setup first.`,
+    );
     return;
   }
 
@@ -58,43 +73,45 @@ async function onBoostStart(member: GuildMember): Promise<void> {
   await clearPendingCustomRoleDeletion(record.id);
   await assignLevelRoles(member, record.boostCounts ?? 1);
 
-  const greetChannel = guild.channels.cache.get(settings.greetChannelId) as TextChannel | undefined;
+  const greetChannel = guild.channels.cache.get(settings.greetChannelId) as
+    | TextChannel
+    | undefined;
   if (greetChannel) {
     const embed = new EmbedBuilder()
       .setColor(0xf47fff)
       .setTitle("New Server Boost! 🎉")
       .setDescription(`${member} has boosted the server!`)
       .addFields(
-        { 
-          name: "Total Boosts", 
-          value: String(record.boostCounts ?? 1), 
-          inline: true 
+        {
+          name: "Total Boosts",
+          value: String(record.boostCounts ?? 1),
+          inline: true,
         },
-        { name: "Member", 
-          value: member.user.tag, 
-          inline: true 
-        },
+        { name: "Member", value: member.user.tag, inline: true },
       )
       .setThumbnail(member.displayAvatarURL({ size: 512 }))
+      .setFooter({ text: "Thank youuu!"})
       .setTimestamp();
     await greetChannel.send({ embeds: [embed] });
   }
 
-  const logChannel = guild.channels.cache.get(settings.logChannelId) as TextChannel | undefined;
+  const logChannel = guild.channels.cache.get(settings.logChannelId) as
+    | TextChannel
+    | undefined;
   if (logChannel) {
     const logEmbed = new EmbedBuilder()
       .setColor(0x57f287)
       .setTitle("Boost Started")
       .addFields(
-        { 
-          name: "User", 
-          value: `${member.user.tag} (${member.id})`, 
-          inline: false 
+        {
+          name: "User",
+          value: `${member.user.tag} (${member.id})`,
+          inline: false,
         },
-        { 
-          name: "Total Boost Count", 
-          value: String(record.boostCounts ?? 1), 
-          inline: true 
+        {
+          name: "Total Boost Count",
+          value: String(record.boostCounts ?? 1),
+          inline: true,
         },
       )
       .setThumbnail(member.displayAvatarURL({ size: 512 }))
@@ -103,7 +120,9 @@ async function onBoostStart(member: GuildMember): Promise<void> {
   }
 
   try {
-    await member.send(`Thank you for boosting the server! You now have access to booster perks.`);
+    await member.send(
+      `Thank you for boosting the server! You now have access to booster perks.`,
+    );
   } catch {}
 }
 
@@ -112,7 +131,9 @@ async function onBoostEnd(member: GuildMember): Promise<void> {
 
   const settings = await getGuildSettings(guild.id);
   if (!settings) {
-    logger.error(`No guild settings found for guild ${guild.id} — run /setup first.`);
+    logger.error(
+      `No guild settings found for guild ${guild.id} — run /setup first.`,
+    );
     return;
   }
 
@@ -122,21 +143,23 @@ async function onBoostEnd(member: GuildMember): Promise<void> {
   await removeAllLevelRoles(member);
   await scheduleCustomRoleDeletionAfterGrace(member.id, guild.id);
 
-  const logChannel = guild.channels.cache.get(settings.logChannelId) as TextChannel | undefined;
+  const logChannel = guild.channels.cache.get(settings.logChannelId) as
+    | TextChannel
+    | undefined;
   if (logChannel) {
     const logEmbed = new EmbedBuilder()
       .setColor(0xed4245)
       .setTitle("Boost Ended")
       .addFields(
-        { 
-          name: "User", 
-          value: `${member.user.tag} (${member.id})`, 
-          inline: false 
+        {
+          name: "User",
+          value: `${member.user.tag} (${member.id})`,
+          inline: false,
         },
-        { 
-          name: "Historical Boost Count", 
-          value: String(result.boostCounts ?? 0), 
-          inline: true 
+        {
+          name: "Historical Boost Count",
+          value: String(result.boostCounts ?? 0),
+          inline: true,
         },
       )
       .setThumbnail(member.displayAvatarURL({ size: 512 }))

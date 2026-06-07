@@ -1,5 +1,4 @@
 import { Client, Events } from "discord.js";
-import { logger } from "../libs/logger.js";
 import { processDueCustomRoleDeletions } from "../services/customRoleCleanup.js";
 
 const CUSTOM_ROLE_CLEANUP_MS = 60 * 60 * 1000;

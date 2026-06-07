@@ -1,4 +1,4 @@
-import { ActivityType, Client, Events } from "discord.js";
+import { Client, Events } from "discord.js";
 import { logger } from "../libs/logger.js";
 
 export default {
