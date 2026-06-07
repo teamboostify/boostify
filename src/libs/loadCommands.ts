@@ -79,7 +79,7 @@ export async function loadCommands(): Promise<void> {
       logger.info("Loading Global commands...");
       await rest.put(
         Routes.applicationCommands(process.env.CLIENT_ID!),
-        { body: commandData }
+        { body: commandData.filter((command) => command.name != "reload")} // load all, except reload
       );
       if (process.env.MASTER_GUILD) {
         await rest.put(
