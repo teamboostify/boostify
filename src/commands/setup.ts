@@ -4,9 +4,12 @@ import {
   ChannelType,
   LabelBuilder,
   MessageFlags,
+  ContainerBuilder,
+  Colors,
 } from "discord.js";
 import { Command } from "../base/classes/command.js";
 import { prisma } from "../libs/database.js";
+import { SystemColors } from "../libs/colors.js";
 
 export default new Command({
   info: new SlashCommandBuilder()
@@ -22,7 +25,12 @@ export default new Command({
     });
 
     if (serversetup) {
-        await interaction.reply({ content: "This server has been setted up.", flags: [MessageFlags.Ephemeral]})
+      const container = new ContainerBuilder().setAccentColor(SystemColors.main)
+      .addTextDisplayComponents((txt) => txt.setContent([
+        "## This server is already set up",
+        "This server was already configured, if you want to change a setting please run the `/settings` command."
+      ].join("\n")))
+        await interaction.reply({ components: [container], flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2]})
         return
     }
 

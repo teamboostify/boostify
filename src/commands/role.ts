@@ -1,6 +1,5 @@
 import {
   SlashCommandBuilder,
-  ChatInputCommandInteraction,
   ColorResolvable,
   ContainerBuilder,
   TextDisplayBuilder,

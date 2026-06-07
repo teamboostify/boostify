@@ -1,5 +1,7 @@
 import {
   ChatInputCommandInteraction,
+  Colors,
+  ContainerBuilder,
   MessageFlags,
   PermissionFlagsBits,
   SlashCommandBuilder,
@@ -32,7 +34,7 @@ export class Command {
   requiredPermissions: (keyof typeof PermissionFlagsBits)[];
   cooldown: number;
   masterLock: boolean
-  private _cooldowns: Map<string, number>;
+  private readonly _cooldowns: Map<string, number>;
 
   constructor({ info, execute, guildOnly = false, ownerOnly = false, requiredPermissions = [], cooldown = 0, masterLock = false }: CommandOptions) {
     this.data = info;
@@ -50,50 +52,12 @@ export class Command {
   }
 
   async run(interaction: ChatInputCommandInteraction, ownerId?: string): Promise<void> {
-    if (this.guildOnly && !interaction.guild) {
-      await interaction.reply({ content: 'This command is limited to servers', flags: MessageFlags.Ephemeral });
+    if (!await this.validateCommand(interaction, ownerId)) {
       return;
     }
 
-    if (this.ownerOnly && interaction.user.id !== ownerId) {
-      await interaction.reply({ content: 'Only the owner can run this command', flags: MessageFlags.Ephemeral });
-      return;
-    }
-
-    if (this.masterLock && interaction.guild) {
-      if (interaction.guild.id != process.env.MASTER_GUILD) {
-        await interaction.reply('This command cannot be ran in this server.')
-      }
-    } 
-
-    if (this.requiredPermissions.length && interaction.guild) {
-      const missing = this.requiredPermissions.filter(
-        p => !interaction.memberPermissions?.has(PermissionFlagsBits[p])
-      );
-      if (missing.length) {
-        await interaction.reply({
-          content: `You're lacking of the necessary permissions: \`${missing.join(', ')}\``,
-          flags: MessageFlags.Ephemeral,
-        });
-        return;
-      }
-    }
-
-    if (this.cooldown > 0) {
-      const now = Date.now();
-      const expiry = this._cooldowns.get(interaction.user.id);
-      if (expiry && now < expiry) {
-        const unixExpiry = Math.floor(expiry / 1000);
-        await interaction.reply({
-          content: `You can use \`/${this.name}\` again, please wait <t:${unixExpiry}:R>.`,
-          flags: MessageFlags.Ephemeral,
-        });
-        return;
-      }
-      this._cooldowns.set(interaction.user.id, now + this.cooldown * 1000);
-      setTimeout(() => this._cooldowns.delete(interaction.user.id), this.cooldown * 1000);
-    }
-
+    await this.applyCooldown(interaction);
+    
     try {
       await this.execute(interaction);
     } catch (err) {
@@ -105,5 +69,75 @@ export class Command {
         await interaction.reply(msg);
       }
     }
+  }
+
+  private async validateCommand(interaction: ChatInputCommandInteraction, ownerId?: string): Promise<boolean> {
+    if (this.guildOnly && !interaction.guild) {
+      await interaction.reply({ content: 'This command is limited to servers', flags: MessageFlags.Ephemeral });
+      return false;
+    }
+
+    if (this.ownerOnly && interaction.user.id !== ownerId) {
+      const container = new ContainerBuilder().setAccentColor(Colors.Red)
+      .addTextDisplayComponents((txt) => txt.setContent([
+        "## Owner-locked command",
+        "This command can only be used by the owner of this server."
+      ].join("\n")))
+      await interaction.reply({ components: [container], flags: [MessageFlags.Ephemeral, MessageFlags.IsComponentsV2]})
+      return false;
+    }
+
+    if (this.masterLock && interaction.guild?.id !== process.env.MASTER_GUILD) {
+      await interaction.reply('This command cannot be ran in this server.');
+      return false;
+    }
+
+    if (!await this.validatePermissions(interaction)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private async validatePermissions(interaction: ChatInputCommandInteraction): Promise<boolean> {
+    if (!this.requiredPermissions.length || !interaction.guild) {
+      return true;
+    }
+
+    const missing = this.requiredPermissions.filter(
+      p => !interaction.memberPermissions?.has(PermissionFlagsBits[p])
+    );
+    
+    if (missing.length) {
+      await interaction.reply({
+        content: `You're lacking of the necessary permissions: \`${missing.join(', ')}\``,
+        flags: MessageFlags.Ephemeral,
+      });
+      return false;
+    }
+    
+    return true;
+  }
+
+  private async applyCooldown(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (this.cooldown <= 0) {
+      return;
+    }
+
+    const now = Date.now();
+    const expiry = this._cooldowns.get(interaction.user.id);
+    
+    if (expiry && now < expiry) {
+      const unixExpiry = Math.floor(expiry / 1000);
+      await interaction.reply({
+        content: `You can use \`/${this.name}\` again, please wait <t:${unixExpiry}:R>.`,
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+    
+    this._cooldowns.set(interaction.user.id, now + this.cooldown * 1000);
+    setTimeout(() => this._cooldowns.delete(interaction.user.id), this.cooldown * 1000);
+    await this.execute(interaction);
   }
 }
