@@ -1,6 +1,5 @@
 import "./libs/loadVariables.js";
 import { Client, GatewayIntentBits, Partials, Collection } from "discord.js";
-import * as dotenv from "dotenv/config";
 import { Command, loadCommands } from "./libs/loadCommands.js";
 import path from "path";
 import fs from "fs";
@@ -9,8 +8,6 @@ import { logger } from "./libs/logger.js";
 import chalk from "chalk";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
-
-dotenv;
 
 process.on("uncaughtException", (error) => {
   logger.error(

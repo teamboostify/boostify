@@ -55,6 +55,6 @@ export default new Command({
     modal.addLabelComponents(GreetingChannelRes, LoggingChannel);
     interaction.showModal(modal);
   },
-  ownerOnly: true,
+  requiredPermissions: ["Administrator"]
 })
 
