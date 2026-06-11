@@ -135,7 +135,9 @@ export default new Command({
             name: "Custom Role",
             value: booster.customRole ? `<@&${booster.customRole.discordRoleId}>` : "None",
             inline: true,
-          }
+          },
+          { name: "Boosting since", value: `<t:${Math.floor(member!.premiumSince!.getTime() / 1000)}:D>`, inline: true},
+          { name: "Boosts Counts", value: booster.boostCounts.toString(), inline: true}
         )
         .setTimestamp();
 
