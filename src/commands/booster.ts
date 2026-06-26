@@ -146,7 +146,7 @@ export default new Command({
 
       if (booster.boostCounts == 0) {
         try {
-          removeBoost(booster.userId, interaction.guild.id);
+          await removeBoost(booster.userId, interaction.guild.id);
         } catch (err) {
           logger.error(
             `An error occured while removing ${booster.userId}'s data: ${err}`,
@@ -180,6 +180,10 @@ export default new Command({
         }
       }
 
+      const premiumSince = member?.premiumSince;
+      const isActiveBooster =
+        booster.active && booster.boostCounts > 0 && !!premiumSince;
+
       const embed = new EmbedBuilder()
         .setColor(booster.active ? 0xf47fff : 0x99aab5)
         .setTitle(`Booster Info: ${user.username}`)
@@ -187,7 +191,7 @@ export default new Command({
         .addFields(
           {
             name: "Status",
-            value: booster.active && booster.boostCounts > 0 ? "🟢 Active" : "🔴 Inactive",
+            value: isActiveBooster ? "🟢 Active" : "🔴 Inactive",
             inline: true,
           },
           {
@@ -199,7 +203,9 @@ export default new Command({
           },
           {
             name: "Boosting since",
-            value: `<t:${Math.floor(member!.premiumSince!.getTime() / 1000)}:D>`,
+            value: premiumSince
+              ? `<t:${Math.floor(premiumSince.getTime() / 1000)}:D>`
+              : "Not currently boosting",
             inline: true,
           },
           {
@@ -228,14 +234,17 @@ export default new Command({
         return;
       }
 
-      await registerBoost(
+      const registered = await registerBoost(
         user.id,
         discordGuild.id,
         discordGuild.name,
         discordGuild.iconURL(),
       );
 
-      const updated = await addBoostCount(user.id, discordGuild.id, amount);
+      const updated =
+        amount > 1
+          ? await addBoostCount(user.id, discordGuild.id, amount - 1)
+          : registered;
       if (!updated) {
         await interaction.editReply({
           content: "Failed to update boost count.",

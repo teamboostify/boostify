@@ -25,8 +25,13 @@ export async function loadLoops() {
 
   for (const file of loopFiles) {
     const filePath = path.join(loops, file);
-    const fileInfo = (await import(pathToFileURL(filePath).href)).default;
-    console.log(file);
+    let fileInfo;
+    try {
+      fileInfo = (await import(pathToFileURL(filePath).href)).default;
+    } catch (err) {
+      logger.error(`Failed to load loop "${file}": ${err}`);
+      continue;
+    }
 
     if (!fileInfo?.runEvery || !fileInfo?.execute) {
       logger.warn(`Skipping ${file} - missing runEvery or execute`);
@@ -34,15 +39,22 @@ export async function loadLoops() {
     }
 
     const run = async () => {
+      if (running) return;
+      running = true;
       try {
         await fileInfo.execute();
       } catch (err) {
         logger.error(`Loop "${file}" failed: ${err}`);
+      } finally {
+        running = false;
       }
     };
 
-    run();
-    setInterval(run, fileInfo.runEvery * 1000);
+    let running = false;
+    void run();
+    setInterval(() => {
+      void run();
+    }, fileInfo.runEvery * 1000);
 
     logger.success(`Loaded loop "${file}"`);
   }
