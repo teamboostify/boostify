@@ -1,7 +1,7 @@
 {
   "name": "boostify",
-  "version": "1.0.2",
-  "description": "",
+  "version": "1.0.3",
+  "description": "A discord server boosting management bot",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {

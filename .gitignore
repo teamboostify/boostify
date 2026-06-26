@@ -3,6 +3,6 @@
 .env
 src/generated/
 
-src/commands/*.make.ts
-src/events/*.make.ts
+src/commands/*.test.ts
+src/events/*.test.ts
 # ^ For commands/events that are being made - not ready for commits
