@@ -5,6 +5,9 @@ import {
   ContainerBuilder,
   TextDisplayBuilder,
   MessageFlags,
+  SeparatorSpacingSize,
+  ButtonBuilder,
+  ButtonStyle,
 } from "discord.js";
 import {
   getBooster,
@@ -14,12 +17,14 @@ import {
   getActiveBoosters,
   getTotalBoosts,
   registerBoost,
+  removeBoost,
 } from "../services/boosterService.js";
 import { Command } from "../base/classes/command.js";
+import { logger } from "../libs/logger.js";
 
 export default new Command({
   info: new SlashCommandBuilder()
-  .setName("booster")
+    .setName("booster")
     .setDescription("Booster management commands")
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addSubcommand((sub) =>
@@ -27,41 +32,44 @@ export default new Command({
         .setName("check")
         .setDescription("Check booster info for a user")
         .addUserOption((opt) =>
-          opt.setName("user").setDescription("The user to check").setRequired(true)
-        )
+          opt
+            .setName("user")
+            .setDescription("The user to check")
+            .setRequired(true),
+        ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("add")
         .setDescription("Add boost count to a user")
         .addUserOption((opt) =>
-          opt.setName("user").setDescription("The user").setRequired(true)
+          opt.setName("user").setDescription("The user").setRequired(true),
         )
         .addIntegerOption((opt) =>
           opt
             .setName("amount")
             .setDescription("Amount to add")
             .setRequired(true)
-            .setMinValue(1)
-        )
+            .setMinValue(1),
+        ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("remove")
         .setDescription("Remove boost count from a user")
         .addUserOption((opt) =>
-          opt.setName("user").setDescription("The user").setRequired(true)
+          opt.setName("user").setDescription("The user").setRequired(true),
         )
         .addIntegerOption((opt) =>
           opt
             .setName("amount")
             .setDescription("Amount to remove")
             .setRequired(true)
-            .setMinValue(1)
-          )
+            .setMinValue(1),
+        ),
     )
     .addSubcommand((sub) =>
-      sub.setName("stats").setDescription("View server boost statistics")
+      sub.setName("stats").setDescription("View server boost statistics"),
     ),
   async execute(interaction) {
     const sub = interaction.options.getSubcommand();
@@ -80,13 +88,18 @@ export default new Command({
     if (sub === "check") {
       const user = interaction.options.getUser("user", true);
       const result = await getBooster(user.id, interaction);
-      const member = await discordGuild.members.fetch(user.id).catch(() => null);
+      const member = await discordGuild.members
+        .fetch(user.id)
+        .catch(() => null);
       const isBoostingServer = member?.premiumSince !== null;
       const avatarUrl =
-        member?.displayAvatarURL({ size: 256 }) ?? user.displayAvatarURL({ size: 256 });
+        member?.displayAvatarURL({ size: 256 }) ??
+        user.displayAvatarURL({ size: 256 });
 
       if (!result?.success) {
-        await interaction.editReply({ content: "Could not load booster info for this server." });
+        await interaction.editReply({
+          content: "Could not load booster info for this server.",
+        });
         return;
       }
 
@@ -98,10 +111,14 @@ export default new Command({
             .setTitle(`Here is the Booster Information for ${user.id}!`)
             .setThumbnail(avatarUrl)
             .addFields(
-              { name: "Status", value: "🟢 Active (Nitro Boost)", inline: true },
+              {
+                name: "Status",
+                value: "🟢 Active (Nitro Boost)",
+                inline: true,
+              },
               { name: "Discord boost", value: discordBoost, inline: true },
               { name: "Custom Role", value: "None", inline: true },
-              { name: "User Ping", value: `<@${user.id}>`}
+              { name: "User Ping", value: `<@${user.id}>` },
             )
             .setTimestamp();
 
@@ -113,7 +130,9 @@ export default new Command({
           .setAccentColor(0xe642a4)
           .addTextDisplayComponents(
             new TextDisplayBuilder().setContent("**Uh oh!**"),
-            new TextDisplayBuilder().setContent(`It looks like ${user} is not a Booster.`)
+            new TextDisplayBuilder().setContent(
+              `It looks like ${user} is not a Booster.`,
+            ),
           );
 
         await interaction.editReply({
@@ -125,19 +144,75 @@ export default new Command({
 
       const booster = result.data;
 
+      if (booster.boostCounts == 0) {
+        try {
+          await removeBoost(booster.userId, interaction.guild.id);
+        } catch (err) {
+          logger.error(
+            `An error occured while removing ${booster.userId}'s data: ${err}`,
+          );
+
+          const supportButton = new ButtonBuilder()
+            .setStyle(ButtonStyle.Link)
+            .setLabel("Our Support Server")
+            .setURL("https://discord.gg/NUtyKs7hA6");
+
+          const container = new ContainerBuilder()
+            .setAccentColor(0xe642a4)
+            .addTextDisplayComponents(
+              new TextDisplayBuilder().setContent("**Uh oh!**"),
+              new TextDisplayBuilder().setContent(
+                `It looks like we ran into an issue\n-# If this issue is persistent, please consult your console logs if you're using a self-hosted version of Boostify, and create an issue on our [Repository](https://github.com/teamboostify/boostify/issues), or use our support server!.`,
+              ),
+            )
+            .addSeparatorComponents((sep) =>
+              sep.setDivider(true).setSpacing(SeparatorSpacingSize.Small),
+            )
+            .addActionRowComponents((actrow) =>
+              actrow.addComponents(supportButton),
+            );
+
+          await interaction.editReply({
+            flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
+            components: [container],
+          });
+          return;
+        }
+      }
+
+      const premiumSince = member?.premiumSince;
+      const isActiveBooster =
+        booster.active && booster.boostCounts > 0 && !!premiumSince;
+
       const embed = new EmbedBuilder()
         .setColor(booster.active ? 0xf47fff : 0x99aab5)
         .setTitle(`Booster Info: ${user.username}`)
         .setThumbnail(avatarUrl)
         .addFields(
-          { name: "Status", value: booster.active ? "🟢 Active" : "🔴 Inactive", inline: true },
           {
-            name: "Custom Role",
-            value: booster.customRole ? `<@&${booster.customRole.discordRoleId}>` : "None",
+            name: "Status",
+            value: isActiveBooster ? "🟢 Active" : "🔴 Inactive",
             inline: true,
           },
-          { name: "Boosting since", value: `<t:${Math.floor(member!.premiumSince!.getTime() / 1000)}:D>`, inline: true},
-          { name: "Boosts Counts", value: booster.boostCounts.toString(), inline: true}
+          {
+            name: "Custom Role",
+            value: booster.customRole
+              ? `<@&${booster.customRole.discordRoleId}>`
+              : "None",
+            inline: true,
+          },
+          {
+            name: "Boosting since",
+            value: premiumSince
+              ? `<t:${Math.floor(premiumSince.getTime() / 1000)}:D>`
+              : "Not currently boosting",
+            inline: true,
+          },
+          {
+            name: "Boosts Counts",
+            value: booster.boostCounts.toString(),
+            inline: true,
+          },
         )
         .setTimestamp();
 
@@ -149,7 +224,9 @@ export default new Command({
       const user = interaction.options.getUser("user", true);
       const amount = interaction.options.getInteger("amount", true);
 
-      const targetMember = await discordGuild.members.fetch(user.id).catch(() => null);
+      const targetMember = await discordGuild.members
+        .fetch(user.id)
+        .catch(() => null);
       if (!targetMember?.premiumSince) {
         await interaction.editReply({
           content: `${user} is not currently boosting this server with Nitro, so boosts can't be added for them.`,
@@ -157,11 +234,21 @@ export default new Command({
         return;
       }
 
-      await registerBoost(user.id, discordGuild.id, discordGuild.name, discordGuild.iconURL());
+      const registered = await registerBoost(
+        user.id,
+        discordGuild.id,
+        discordGuild.name,
+        discordGuild.iconURL(),
+      );
 
-      const updated = await addBoostCount(user.id, discordGuild.id, amount);
+      const updated =
+        amount > 1
+          ? await addBoostCount(user.id, discordGuild.id, amount - 1)
+          : registered;
       if (!updated) {
-        await interaction.editReply({ content: "Failed to update boost count." });
+        await interaction.editReply({
+          content: "Failed to update boost count.",
+        });
         return;
       }
 
@@ -169,12 +256,10 @@ export default new Command({
       const container = new ContainerBuilder()
         .setAccentColor(0xe642a4)
         .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(`**Boost successfully added!**`),
           new TextDisplayBuilder().setContent(
-            `**Boost successfully added!**`
+            `We've successfully added ${amount} ${boostWord} to ${user}'s profile.`,
           ),
-          new TextDisplayBuilder().setContent(
-            `We've successfully added ${amount} ${boostWord} to ${user}'s profile.`
-          )
         );
 
       await interaction.editReply({
@@ -190,7 +275,9 @@ export default new Command({
 
       const updated = await removeBoostCount(user.id, discordGuild.id, amount);
       if (!updated) {
-        await interaction.editReply({ content: `No booster record found for ${user.tag}.` });
+        await interaction.editReply({
+          content: `No booster record found for ${user.tag}.`,
+        });
         return;
       }
 
@@ -211,9 +298,21 @@ export default new Command({
         .setColor(0xf47fff)
         .setTitle("Server Boost Statistics")
         .addFields(
-          { name: "Current Boosters", value: String(activeBoosters.length), inline: true },
-          { name: "Total Boosts (All Time)", value: String(totalBoosts), inline: true },
-          { name: "Unique Boosters (All Time)", value: String(allBoosters.length), inline: true }
+          {
+            name: "Current Boosters",
+            value: String(activeBoosters.length),
+            inline: true,
+          },
+          {
+            name: "Total Boosts (All Time)",
+            value: String(totalBoosts),
+            inline: true,
+          },
+          {
+            name: "Unique Boosters (All Time)",
+            value: String(allBoosters.length),
+            inline: true,
+          },
         )
         .setTimestamp();
 
@@ -221,4 +320,4 @@ export default new Command({
       return;
     }
   },
-})
+});

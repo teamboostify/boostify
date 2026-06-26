@@ -6,6 +6,7 @@ import fs from "fs";
 import { fileURLToPath, pathToFileURL } from "url";
 import { logger } from "./libs/logger.js";
 import chalk from "chalk";
+import { loadLoops } from "./libs/loops.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
@@ -99,6 +100,7 @@ const eventFiles = fs
   }
 
   await loadCommands();
+  await loadLoops();
 
   try {
     client.login(process.env.BOT_TOKEN);
