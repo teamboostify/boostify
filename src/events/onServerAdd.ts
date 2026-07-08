@@ -4,7 +4,7 @@ import { SystemColors } from "../libs/colors.js";
 
 export default {
     name: Events.GuildCreate,
-    async execute(guild: Guild, client: Client) {
+    async execute(client: Client, guild: Guild,) {
         logger.custom(`Added to the server with ID ${guild.id}`, "ADDED", "magenta");
         try {
             const owner = await guild.fetchOwner();
@@ -19,7 +19,7 @@ export default {
                     .addTextDisplayComponents(text =>
                         text.setContent(
                             `## Thank you for adding me!\n` +
-                            `Hi! I'm Boostify! An open-source boosting bot to help you manage your server perks alongside your community!\n` +
+                            `Hi! I'm **Boostify**! An open-source boosting management bot, made to help you manage your server perks alongside your community!\n` +
                             `Use some of the links below to have a better knowledge about me!`
                         )
                     )
