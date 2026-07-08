@@ -26,7 +26,6 @@ export default {
     oldMember: GuildMember,
     newMember: GuildMember,
   ) {
-    if (oldMember.user.bot) return;
     try {
       if (oldMember.partial) oldMember = await oldMember.fetch();
       if (newMember.partial) newMember = await newMember.fetch();
