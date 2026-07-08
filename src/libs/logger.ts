@@ -1,4 +1,5 @@
-import chalk from "chalk";
+import chalk, { Chalk } from "chalk";
+import { ChalkColors } from "../base/types/types.js";
 
 const timestamp = () => chalk.dim(`${new Date().toISOString()}`);
 
@@ -36,5 +37,8 @@ export const logger = {
   },
   success: (message: string, ...args: any[]) => {
     console.log(`${timestamp()} ${chalk.green("✓")} ${message}`, ...args);
-  } 
+  },
+  custom: (message: string, title: string, color: ChalkColors = "green", ...args: any[]) => {
+    console.log(`${timestamp()} ${chalk[color](title.toUpperCase())} ${message}`, ...args)
+  }
 };
