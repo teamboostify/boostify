@@ -1,26 +1,41 @@
 <div align="center">
-    <img height="120px" src=".github/logo.png" alt="Boostify Logo" />
-    <h1>Boostify</h1>
-    <p><strong>Maximize your Discord server boost management</strong></p>
-    <img src="https://img.shields.io/github/actions/workflow/status/teamboostify/boostify/node.js.yml?style=flat-square" />
-    <img src="https://img.shields.io/github/license/teamboostify/boostify?style=flat-square&color=FF47B5" />
-    <img src="https://img.shields.io/github/v/tag/teamboostify/boostify?style=flat-square&color=FF47B5" />
-    <img src="https://img.shields.io/github/forks/teamboostify/boostify?style=flat-square&color=FF47B5" />
-    <img src="https://img.shields.io/github/checks-status/teamboostify/boostify/main?style=flat-square&color=FF47B5" /><br />
-    <img src="https://img.shields.io/github/stars/teamboostify/boostify?style=flat-square&color=FF47B5" />
-    <a href="https://discord.gg/vZgeWhZ9aF">
-        <img src="https://img.shields.io/discord/1453868977720922287?style=flat-square&logo=Discord&logoColor=white&label=Support%20Server&color=7289da" />
-    </a>
+
+<img height="120px" src=".github/logo.png" alt="Boostify Logo">
+
+<h1>Boostify</h1>
+
+<p>
+<strong>Maximize your Discord server boost management</strong>
+</p>
+
+<p>
+<img src="https://img.shields.io/github/actions/workflow/status/teamboostify/boostify/node.js.yml?branch=main&style=flat-square" alt="Build Status">
+<img src="https://img.shields.io/github/license/teamboostify/boostify?style=flat-square&color=FF47B5" alt="License">
+<img src="https://img.shields.io/github/v/tag/teamboostify/boostify?style=flat-square&color=FF47B5" alt="Version">
+<img src="https://img.shields.io/github/forks/teamboostify/boostify?style=flat-square&color=FF47B5" alt="Forks">
+<img src="https://img.shields.io/github/stars/teamboostify/boostify?style=flat-square&color=FF47B5&cacheSeconds=60" alt="Stars">
+</p>
+
+<p>
+<a href="https://discord.gg/vZgeWhZ9aF">
+<img src="https://img.shields.io/discord/1453868977720922287?style=flat-square&logo=discord&logoColor=white&label=Support%20Server&color=5865F2" alt="Discord">
+</a>
+</p>
+
 </div>
-
-### Overview
-
-> [!NOTE]
-> **Boostify** is a work-in-progress project. While our team ensures everything in our platform works flawlessly, you're more than welcome to make an issue if you find an issue. Please join our Discord server if you require any assistance: [discord.gg/vZgeWhZ9aF](https://discord.gg/vZgeWhZ9aF).
 
 ---
 
-# Quick Start
+# 📖 Overview
+
+> [!NOTE]
+> **Boostify is currently a work-in-progress project.**
+>
+> Our team is actively improving stability, adding new features, and making Boostify better every release. If you encounter an issue, please open a GitHub issue or join our Discord server for support.
+
+---
+
+# 🚀 Quick Start
 
 Get Boostify running in minutes using the official cloud version or self-host it yourself.
 
@@ -39,9 +54,7 @@ The fastest way to start using Boostify.
 
 ## 1. Invite Boostify
 
-Invite Boostify to your Discord server:
-
-👉 https://discord.com/oauth2/authorize?client_id=1453802179789066442
+[Invite Boostify](https://discord.com/oauth2/authorize?client_id=1453802179789066442)
 
 ---
 
@@ -64,14 +77,12 @@ Boostify requires the following permissions:
 
 Once invited, configure features like:
 
-- Booster reward roles
-- Auto thank-you messages
-- Logging
-- Moderation
-- Booster analytics
-- Freemium perks
-
-Continue to the documentation for advanced configuration.
+- 🎁 Booster reward roles
+- 💬 Auto thank-you messages
+- 📜 Logging
+- 🛡️ Moderation
+- 📊 Booster analytics
+- ⚡ Freemium perks
 
 ---
 
@@ -81,16 +92,16 @@ Self-host Boostify for full control and customization.
 
 ---
 
-## Requirements
+# Requirements
 
-### Required
+## Required
 
 - Node.js 20+
 - PostgreSQL
 - Git
 - Discord Bot Token
 
-### Optional
+## Optional
 
 - Docker
 - PM2
@@ -104,8 +115,9 @@ Self-host Boostify for full control and customization.
 
 ```bash
 git clone https://github.com/teamboostify/boostify.git
+
 cd boostify
-````
+```
 
 ---
 
@@ -168,12 +180,13 @@ npm run dev
 
 ```bash
 npm run build
+
 npm start
 ```
 
 ---
 
-# Docker Deployment
+# 🐳 Docker Deployment
 
 Boostify supports Docker deployments out of the box.
 
@@ -194,43 +207,45 @@ docker run -d \
 
 ---
 
-# Recommended Production Stack
+# 🏗️ Recommended Production Stack
 
-For the best production experience, we recommend:
+For the best production experience:
 
-* Docker
-* PM2
-* Linux VPS
-* Managed PostgreSQL
-* Reverse Proxy (Nginx or Caddy)
-
----
-
-# Features
-
-* 🚀 Boost Tracking
-* 🎁 Reward Roles
-* 💬 Auto Thank-You Messages
-* 📊 Booster Analytics
-* 🛡️ Moderation
-* 📜 Logging
-* ⚡ Freemium Perks
-* 🐳 Docker Support
-* 🔧 Self Hosting
-* 🌐 Cloud Hosted Version
+- Docker
+- PM2
+- Linux VPS
+- Managed PostgreSQL
+- Reverse Proxy (Nginx or Caddy)
 
 ---
 
-# Support
+# ✨ Features
+
+- 🚀 Boost Tracking
+- 🎁 Reward Roles
+- 💬 Auto Thank-You Messages
+- 📊 Booster Analytics
+- 🛡️ Moderation
+- 📜 Logging
+- ⚡ Freemium Perks
+- 🐳 Docker Support
+- 🔧 Self Hosting
+- 🌐 Cloud Hosted Version
+
+---
+
+# ❤️ Support
 
 Need help?
 
-* Join the support server: [https://discord.gg/vZgeWhZ9aF](https://discord.gg/vZgeWhZ9aF)
-* Open an issue on GitHub
-* Check the documentation
+- 💬 [Join the Discord Support Server](https://discord.gg/vZgeWhZ9aF)
+- 🐞 [Open a GitHub Issue](https://github.com/teamboostify/boostify/issues/new/choose)
+- 📖 [Read the Documentation](https://docs.boostify.breaddevv.cc/)
 
 ---
 
 <div align="center">
-   Made with ❤️ by Team Boostify
+
+Made with ❤️ by **Team Boostify**
+
 </div>
