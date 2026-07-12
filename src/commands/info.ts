@@ -121,12 +121,18 @@ export default new Command({
       .setLabel("Our Repository")
       .setURL("https://boostify.breaddevv.cc/github");
 
+      const topgg = new ButtonBuilder()
+      .setStyle(ButtonStyle.Link)
+      .setLabel("Support Us On Top.gg")
+      .setURL("https://top.gg/bot/1453802179789066442");
+
     const actionBar = new ActionRowBuilder<ButtonBuilder>().setComponents(
       website,
       terms,
       privacy,
       support,
-      repo
+      repo,
+      topgg
     );
 
     await interaction.editReply({
