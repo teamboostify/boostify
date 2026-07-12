@@ -30,7 +30,7 @@ export default new Command({
     const hours = Math.floor(uptime / 3600000) % 24;
     const minutes = Math.floor(uptime / 60000) % 60;
     const seconds = Math.floor(uptime / 1000) % 60;
-    
+
     const uptimeString = `${days}d ${hours}h ${minutes}m ${seconds}s`;
 
     const embed = new EmbedBuilder()
@@ -66,7 +66,7 @@ export default new Command({
         {
           name: "Statistics",
           value: `**Servers:** ${interaction.client.guilds.cache.size}\n` +
-                `**Users:** ${interaction.client.users.cache.size}\n`,
+            `**Users:** ${interaction.client.users.cache.size}\n`,
           inline: true,
         },
         {
@@ -90,9 +90,9 @@ export default new Command({
           inline: true,
         }
       )
-      .setFooter({ 
-        text: `Requested by ${interaction.user.tag}`, 
-        iconURL: interaction.user.displayAvatarURL() 
+      .setFooter({
+        text: `Requested by ${interaction.user.tag}`,
+        iconURL: interaction.user.displayAvatarURL()
       })
       .setTimestamp();
 
@@ -116,28 +116,30 @@ export default new Command({
       .setLabel("Support Server")
       .setURL("https://boostify.breaddevv.cc/discord");
 
-      const repo = new ButtonBuilder()
+    const repo = new ButtonBuilder()
       .setStyle(ButtonStyle.Link)
       .setLabel("Our Repository")
       .setURL("https://boostify.breaddevv.cc/github");
 
-      const topgg = new ButtonBuilder()
+    const topgg = new ButtonBuilder()
       .setStyle(ButtonStyle.Link)
       .setLabel("Support Us On Top.gg")
       .setURL("https://top.gg/bot/1453802179789066442");
 
-    const actionBar = new ActionRowBuilder<ButtonBuilder>().setComponents(
+    const actionRow1 = new ActionRowBuilder<ButtonBuilder>().setComponents(
       website,
       terms,
       privacy,
       support,
-      repo,
+      repo
+    );
+    const actionRow2 = new ActionRowBuilder<ButtonBuilder>().setComponents(
       topgg
     );
 
     await interaction.editReply({
       embeds: [embed],
-      components: [actionBar],
+      components: [actionRow1, actionRow2],
     });
   },
 })
