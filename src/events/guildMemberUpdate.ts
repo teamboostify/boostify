@@ -4,6 +4,7 @@ import {
   EmbedBuilder,
   Events,
   GuildMember,
+  PermissionFlagsBits,
   TextChannel,
 } from "discord.js";
 import {
@@ -40,15 +41,56 @@ export default {
     const isBoostingNow = newMember.premiumSince !== null;
 
     if (!wasBoostingBefore && isBoostingNow) {
-      await onBoostStart(newMember);
+      try {
+        await onBoostStart(newMember);
+      } catch (error) {
+        logger.error(
+          `onBoostStart failed for user ${newMember.id} in guild ${newMember.guild.id}:`,
+          error,
+        );
+      }
     } else if (wasBoostingBefore && !isBoostingNow) {
-      await onBoostEnd(newMember);
+      try {
+        await onBoostEnd(newMember);
+      } catch (error) {
+        logger.error(
+          `onBoostEnd failed for user ${newMember.id} in guild ${newMember.guild.id}:`,
+          error,
+        );
+      }
     }
   },
 };
 
 async function getGuildSettings(guildId: string) {
   return prisma.guildSetting.findUnique({ where: { gid: guildId } });
+}
+async function safeSend(
+  channel: TextChannel | undefined,
+  payload: Parameters<TextChannel["send"]>[0],
+): Promise<void> {
+  if (!channel) return;
+
+  const me = channel.guild.members.me;
+  const perms = me ? channel.permissionsFor(me) : null;
+
+  if (
+    !perms?.has([
+      PermissionFlagsBits.ViewChannel,
+      PermissionFlagsBits.SendMessages,
+    ])
+  ) {
+    logger.warn(
+      `Missing permission to send in channel ${channel.id} (guild ${channel.guild.id})`,
+    );
+    return;
+  }
+
+  try {
+    await channel.send(payload);
+  } catch (error) {
+    logger.error(`Failed to send message in channel ${channel.id}:`, error);
+  }
 }
 
 async function onBoostStart(member: GuildMember): Promise<void> {
@@ -76,48 +118,48 @@ async function onBoostStart(member: GuildMember): Promise<void> {
   const greetChannel = guild.channels.cache.get(settings.greetChannelId) as
     | TextChannel
     | undefined;
-  if (greetChannel) {
-    const embed = new EmbedBuilder()
-      .setColor(0xf47fff)
-      .setTitle("New Server Boost! 🎉")
-      .setDescription(`${member} has boosted the server!`)
-      .addFields(
-        {
-          name: "Total Boosts",
-          value: String(record.boostCounts ?? 1),
-          inline: true,
-        },
-        { name: "Member", value: member.user.tag, inline: true },
-      )
-      .setThumbnail(member.displayAvatarURL({ size: 512 }))
-      .setFooter({ text: "Thank youuu!"})
-      .setTimestamp();
-    await greetChannel.send({ embeds: [embed] });
-  }
+
+  const embed = new EmbedBuilder()
+    .setColor(0xf47fff)
+    .setTitle("New Server Boost! 🎉")
+    .setDescription(`${member} has boosted the server!`)
+    .addFields(
+      {
+        name: "Total Boosts",
+        value: String(record.boostCounts ?? 1),
+        inline: true,
+      },
+      { name: "Member", value: member.user.tag, inline: true },
+    )
+    .setThumbnail(member.displayAvatarURL({ size: 512 }))
+    .setFooter({ text: "Thank youuu!" })
+    .setTimestamp();
+
+  await safeSend(greetChannel, { embeds: [embed] });
 
   const logChannel = guild.channels.cache.get(settings.logChannelId) as
     | TextChannel
     | undefined;
-  if (logChannel) {
-    const logEmbed = new EmbedBuilder()
-      .setColor(0x57f287)
-      .setTitle("Boost Started")
-      .addFields(
-        {
-          name: "User",
-          value: `${member.user.tag} (${member.id})`,
-          inline: false,
-        },
-        {
-          name: "Total Boost Count",
-          value: String(record.boostCounts ?? 1),
-          inline: true,
-        },
-      )
-      .setThumbnail(member.displayAvatarURL({ size: 512 }))
-      .setTimestamp();
-    await logChannel.send({ embeds: [logEmbed] });
-  }
+
+  const logEmbed = new EmbedBuilder()
+    .setColor(0x57f287)
+    .setTitle("Boost Started")
+    .addFields(
+      {
+        name: "User",
+        value: `${member.user.tag} (${member.id})`,
+        inline: false,
+      },
+      {
+        name: "Total Boost Count",
+        value: String(record.boostCounts ?? 1),
+        inline: true,
+      },
+    )
+    .setThumbnail(member.displayAvatarURL({ size: 512 }))
+    .setTimestamp();
+
+  await safeSend(logChannel, { embeds: [logEmbed] });
 
   try {
     await member.send(
@@ -146,24 +188,24 @@ async function onBoostEnd(member: GuildMember): Promise<void> {
   const logChannel = guild.channels.cache.get(settings.logChannelId) as
     | TextChannel
     | undefined;
-  if (logChannel) {
-    const logEmbed = new EmbedBuilder()
-      .setColor(0xed4245)
-      .setTitle("Boost Ended")
-      .addFields(
-        {
-          name: "User",
-          value: `${member.user.tag} (${member.id})`,
-          inline: false,
-        },
-        {
-          name: "Historical Boost Count",
-          value: String(result.boostCounts ?? 0),
-          inline: true,
-        },
-      )
-      .setThumbnail(member.displayAvatarURL({ size: 512 }))
-      .setTimestamp();
-    await logChannel.send({ embeds: [logEmbed] });
-  }
+
+  const logEmbed = new EmbedBuilder()
+    .setColor(0xed4245)
+    .setTitle("Boost Ended")
+    .addFields(
+      {
+        name: "User",
+        value: `${member.user.tag} (${member.id})`,
+        inline: false,
+      },
+      {
+        name: "Historical Boost Count",
+        value: String(result.boostCounts ?? 0),
+        inline: true,
+      },
+    )
+    .setThumbnail(member.displayAvatarURL({ size: 512 }))
+    .setTimestamp();
+
+  await safeSend(logChannel, { embeds: [logEmbed] });
 }

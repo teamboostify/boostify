@@ -193,8 +193,13 @@ export async function removeBoost(userId: string, guildDiscordId: string) {
   });
   if (!guild) return null;
 
-  return prisma.booster.update({
+  const existing = await prisma.booster.findUnique({
     where: { userId_guildId: { userId, guildId: guild.id } },
+  });
+  if (!existing) return null;
+
+  return prisma.booster.update({
+    where: { id: existing.id },
     data: { active: false },
     include: { customRole: true },
   });
@@ -210,8 +215,13 @@ export async function addBoostCount(
   });
   if (!guild) return null;
 
-  return prisma.booster.update({
+  const existing = await prisma.booster.findUnique({
     where: { userId_guildId: { userId, guildId: guild.id } },
+  });
+  if (!existing) return null;
+
+  return prisma.booster.update({
+    where: { id: existing.id },
     data: { boostCounts: { increment: amount } },
   });
 }
