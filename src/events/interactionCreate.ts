@@ -6,10 +6,11 @@ import {
   MessageFlags,
   type InteractionReplyOptions,
 } from "discord.js";
+import { DiscordClient } from "../base/types/discord.js";
 
 export default {
   name: Events.InteractionCreate,
-  async execute(client: Client & { commands: any }, interaction: Interaction) {
+  async execute(client: DiscordClient, interaction: Interaction) {
     if (
       interaction.type !== InteractionType.ApplicationCommand ||
       !interaction.isChatInputCommand()

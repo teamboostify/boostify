@@ -1,4 +1,5 @@
-import { ActivityType, Client, Events } from "discord.js";
+import { ActivityType, Events } from "discord.js";
+import { DiscordClient } from "../base/types/discord.js";
 
 function getStatus(guilds: number, users: number) {
     const statuses = [
@@ -35,7 +36,7 @@ export default {
     name: Events.ClientReady,
     once: true,
 
-    execute(client: Client) {
+    execute(client: DiscordClient) {
         if (!client.user) return;
 
         const updatePresence = () => {

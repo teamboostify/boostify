@@ -8,10 +8,11 @@ import {
 } from "discord.js";
 import { prisma } from "../libs/database.js";
 import { SystemColors } from "../libs/colors.js";
+import { DiscordClient } from "../base/types/discord.js";
 
 export default {
   name: Events.InteractionCreate,
-  async execute(_client: Client, interaction: Interaction) {
+  async execute(_client: DiscordClient, interaction: Interaction) {
     if (!interaction.isModalSubmit()) return;
     if (!interaction.guild) return;
     if (interaction.customId != 'setupboostifymodal' && interaction.customId != 'configboostifymodal') return;
