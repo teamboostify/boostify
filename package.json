@@ -1,6 +1,6 @@
 {
   "name": "boostify",
-  "version": "1.0.3.1",
+  "version": "1.0.4",
   "description": "A discord server boosting management bot",
   "main": "dist/index.js",
   "type": "module",
@@ -17,7 +17,7 @@
     "@types/node": "^20.19.39",
     "@types/pg": "^8.20.0",
     "prisma": "^7.8.0",
-    "typescript": "^5.0.0"
+    "typescript": "^7.0.2"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
