@@ -1,9 +1,9 @@
-import { AutocompleteInteraction, ChatInputCommandInteraction, Client, Collection, Events } from "discord.js";
-import { Command } from "../base/classes/command.js";
+import { AutocompleteInteraction, Events } from "discord.js";
+import { DiscordClient } from "../base/types/discord.js";
 
 export default {
   name: Events.InteractionCreate,
-  async execute(client: Client & { commands: Collection<string, Command> }, interaction: AutocompleteInteraction) {
+  async execute(client: DiscordClient, interaction: AutocompleteInteraction) {
     if (!interaction.isAutocomplete()) return;
     if (interaction.commandName != 'help') return;
     

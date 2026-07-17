@@ -1,10 +1,11 @@
 import { ButtonBuilder, ButtonStyle, Client, ContainerBuilder, Events, Guild, MessageFlags } from "discord.js";
 import { logger } from "../libs/logger.js";
 import { SystemColors } from "../libs/colors.js";
+import { DiscordClient } from "../base/types/discord.js";
 
 export default {
     name: Events.GuildCreate,
-    async execute(client: Client, guild: Guild,) {
+    async execute(client: DiscordClient, guild: Guild,) {
         logger.custom(`Added to the server with ID ${guild.id}`, "ADDED", "magenta");
         try {
             const owner = await guild.fetchOwner();

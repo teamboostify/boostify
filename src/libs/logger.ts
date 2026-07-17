@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { ChalkColors } from "../base/types/types.js";
+import { ChalkColors } from "../base/types/chalk.js";
 
 const timestamp = () => chalk.dim(`${new Date().toISOString()}`);
 

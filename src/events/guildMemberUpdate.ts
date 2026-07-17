@@ -1,9 +1,10 @@
 import "../libs/loadVariables.js";
 import {
-  Client,
+  ContainerBuilder,
   EmbedBuilder,
   Events,
   GuildMember,
+  MessageFlags,
   PermissionFlagsBits,
   TextChannel,
 } from "discord.js";
@@ -19,11 +20,13 @@ import {
 } from "../services/roleService.js";
 import { logger } from "../libs/logger.js";
 import { prisma } from "../libs/database.js";
+import { DiscordClient } from "../base/types/discord.js";
+import { SystemColors } from "../libs/colors.js";
 
 export default {
   name: Events.GuildMemberUpdate,
   async execute(
-    _client: Client,
+    _client: DiscordClient,
     oldMember: GuildMember,
     newMember: GuildMember,
   ) {
@@ -162,10 +165,27 @@ async function onBoostStart(member: GuildMember): Promise<void> {
   await safeSend(logChannel, { embeds: [logEmbed] });
 
   try {
-    await member.send(
-      `Thank you for boosting the server! You now have access to booster perks.`,
-    );
-  } catch {}
+    const guild = await member.guild.fetch();
+    const serverImage = guild.iconURL(); 
+
+    const container = new ContainerBuilder().addSectionComponents(comp =>
+      comp
+        .addTextDisplayComponents(text =>
+          text.setContent(
+            `## Thanks for the boost! <a:booster:1527782487349268480>\n` +
+            `Thank you for boosting the server **${guild.name}**\n\n`+
+            `Your support helps us unlock new server perks and continue making this community even better for everyone.\n\n`+
+            `We truly appreciate you being part of our journey. Enjoy your booster rewards! ✨`
+          )
+        )
+        .setThumbnailAccessory(accessory => accessory.setURL(serverImage ? serverImage : ''))
+    )
+      .setAccentColor(SystemColors.main);
+    await member.send({
+      components: [container],
+      flags: [MessageFlags.IsComponentsV2]
+    });
+  } catch { }
 }
 
 async function onBoostEnd(member: GuildMember): Promise<void> {
