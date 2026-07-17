@@ -12,14 +12,7 @@ import { fileURLToPath, pathToFileURL } from "url";
 import { logger } from "./logger.js";
 import chalk from "chalk";
 import { client } from "../index.js";
-
-export interface Command {
-  data:
-  | SlashCommandBuilder
-  | SlashCommandSubcommandsOnlyBuilder
-  | Omit<SlashCommandBuilder, "addSubcommand" | "addSubcommandGroup">;
-  execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
-}
+import { Command } from "../base/classes/command.js";
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 

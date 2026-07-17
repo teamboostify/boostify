@@ -1,6 +1,6 @@
 import "./libs/loadVariables.js";
 import { Client, GatewayIntentBits, Partials, Collection } from "discord.js";
-import { Command, loadCommands } from "./libs/loadCommands.js";
+import { loadCommands } from "./libs/loadCommands.js";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath, pathToFileURL } from "url";
