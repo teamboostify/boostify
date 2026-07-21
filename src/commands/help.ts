@@ -6,6 +6,7 @@ import {
 } from "discord.js";
 import { Command } from "../base/classes/command.js";
 import { SystemColors } from "../libs/colors.js";
+import { Container } from "../base/functions/embed.js";
 
 const knowledgebase: Record<string, string> = {
   booster:
@@ -574,17 +575,16 @@ export default new Command({
     const sub = interaction.options.getString("command", true);
 
     if (knowledgebase[sub]) {
-      const container = new ContainerBuilder()
-      .setAccentColor(SystemColors.main)
-      .addTextDisplayComponents(txt => txt.setContent(
+      const container = await Container()
+      container.addTextDisplayComponents(txt => txt.setContent(
         `## Command info: \`/${sub}\`\n`+
         knowledgebase[sub] 
       ));
 
       await interaction.reply({ components: [container], flags: [MessageFlags.IsComponentsV2]})
     } else {
-      const container = new ContainerBuilder()
-      .setAccentColor(Colors.Red)
+      const container = await Container(Colors.Red);
+      container.setAccentColor(Colors.Red)
       .addTextDisplayComponents(txt => txt.setContent(
         `## Command not found\n`+
         `We couldn't find any resources matching the command \`${sub}\`, please try later.` 

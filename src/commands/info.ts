@@ -8,6 +8,7 @@ import {
 import axios from "axios";
 import { Command } from "../base/classes/command.js";
 import packageInfo from "../../package.json" with { type: "json" };
+import { Embed } from "../base/functions/embed.js";
 
 interface GithubRes {
   login: string,
@@ -33,16 +34,15 @@ export default new Command({
 
     const uptimeString = `${days}d ${hours}h ${minutes}m ${seconds}s`;
 
-    const embed = new EmbedBuilder()
-      .setColor(16712630)
-      .setThumbnail(interaction.client.user.displayAvatarURL({ size: 2048 }))
+    const embed = await Embed();
+      embed.setThumbnail(interaction.client.user.displayAvatarURL({ size: 2048 }))
       .setTitle("Bot information")
       .setDescription(
         "Boostify is a Discord bot designed to help you manage your server boosts."
       )
       .addFields(
         {
-          name: "Developers",
+          name: `Contributors [${info.data.length}]`,
           value: info.data
             .map((user) => `[@${user.login}](${user.html_url})`)
             .join("\n"),

@@ -104,7 +104,7 @@ const eventFiles = fs
   await loadLoops();
 
   try {
-    client.login(process.env.BOT_TOKEN);
+    await client.login(process.env.BOT_TOKEN);
   } catch (err) {
     console.log(err);
   }
