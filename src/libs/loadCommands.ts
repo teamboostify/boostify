@@ -47,7 +47,7 @@ export async function loadCommands(): Promise<void> {
     }
 
     if (command?.masterLock) {
-      if (!process.env.MASTER_GUILD) {
+      if (!process.env.MASTER_GUILD || !process.env.GUILD_ID) {
         logger.warn(`Skipping ${file} - missing ${chalk.bold('MASTER_GUILD')} on environmental variables.`);
         continue;
       }

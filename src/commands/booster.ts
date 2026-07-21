@@ -8,6 +8,7 @@ import {
   SeparatorSpacingSize,
   ButtonBuilder,
   ButtonStyle,
+  Colors,
 } from "discord.js";
 import {
   getBooster,
@@ -21,6 +22,7 @@ import {
 } from "../services/boosterService.js";
 import { Command } from "../base/classes/command.js";
 import { logger } from "../libs/logger.js";
+import { Container, Embed } from "../base/functions/embed.js";
 
 export default new Command({
   info: new SlashCommandBuilder()
@@ -106,9 +108,8 @@ export default new Command({
       if (!result.data) {
         if (isBoostingServer && member && member.premiumSince) {
           const discordBoost = `🟢 Boosting since <t:${Math.floor(member.premiumSince.getTime() / 1000)}:D>`;
-          const embed = new EmbedBuilder()
-            .setColor(0xff73fa)
-            .setTitle(`Here is the Booster Information for ${user.id}!`)
+          const embed = await Embed();
+            embed.setTitle(`Here is the Booster Information for ${user.id}!`)
             .setThumbnail(avatarUrl)
             .addFields(
               {
@@ -126,8 +127,8 @@ export default new Command({
           return;
         }
 
-        const container = new ContainerBuilder()
-          .setAccentColor(0xe642a4)
+        const container = await Container();
+          container.setAccentColor(0xe642a4)
           .addTextDisplayComponents(
             new TextDisplayBuilder().setContent("**Uh oh!**"),
             new TextDisplayBuilder().setContent(
@@ -157,9 +158,8 @@ export default new Command({
             .setLabel("Our Support Server")
             .setURL("https://discord.gg/NUtyKs7hA6");
 
-          const container = new ContainerBuilder()
-            .setAccentColor(0xe642a4)
-            .addTextDisplayComponents(
+          const container = await Container(Colors.Red)
+            container.addTextDisplayComponents(
               new TextDisplayBuilder().setContent("**Uh oh!**"),
               new TextDisplayBuilder().setContent(
                 `It looks like we ran into an issue\n-# If this issue is persistent, please consult your console logs if you're using a self-hosted version of Boostify, and create an issue on our [Repository](https://github.com/teamboostify/boostify/issues), or use our support server!.`,
@@ -184,8 +184,8 @@ export default new Command({
       const isActiveBooster =
         booster.active && booster.boostCounts > 0 && !!premiumSince;
 
-      const embed = new EmbedBuilder()
-        .setColor(booster.active ? 0xf47fff : 0x99aab5)
+      const embed = await Embed();
+        embed.setColor(booster.active ? 0xf47fff : 0x99aab5)
         .setTitle(`Booster Info: ${user.username}`)
         .setThumbnail(avatarUrl)
         .addFields(
@@ -253,9 +253,8 @@ export default new Command({
       }
 
       const boostWord = amount === 1 ? "boost" : "boosts";
-      const container = new ContainerBuilder()
-        .setAccentColor(0xe642a4)
-        .addTextDisplayComponents(
+      const container = await Container();
+        container.addTextDisplayComponents(
           new TextDisplayBuilder().setContent(`**Boost successfully added!**`),
           new TextDisplayBuilder().setContent(
             `We've successfully added ${amount} ${boostWord} to ${user}'s profile.`,
@@ -294,9 +293,8 @@ export default new Command({
         getTotalBoosts(discordGuild.id),
       ]);
 
-      const embed = new EmbedBuilder()
-        .setColor(0xf47fff)
-        .setTitle("Server Boost Statistics")
+      const embed = await Embed();
+        embed.setTitle("Server Boost Statistics")
         .addFields(
           {
             name: "Current Boosters",

@@ -12,13 +12,11 @@ import {
   deleteCustomRole,
 } from "../services/roleService.js";
 import { Command } from "../base/classes/command.js";
+import { Container } from "../base/functions/embed.js";
 
-const ACCENT = 0xe642a4;
-
-function componentsV2(lines: string[]) {
-  const container = new ContainerBuilder()
-    .setAccentColor(ACCENT)
-    .addTextDisplayComponents(...lines.map((content) => new TextDisplayBuilder().setContent(content)));
+async function componentsV2(lines: string[]) {
+  const container = await Container();
+    container.addTextDisplayComponents(...lines.map((content) => new TextDisplayBuilder().setContent(content)));
   return {
     flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
     components: [container],
@@ -60,7 +58,7 @@ export default new Command({
   async execute(interaction) {
     const guild = interaction.guild;
     if (!guild) {
-      await interaction.reply(componentsV2(["This command can only be used in a server."]));
+      await interaction.reply(await componentsV2(["This command can only be used in a server."]));
       return;
     }
 
@@ -69,7 +67,7 @@ export default new Command({
 
     if (!resolved?.success) {
       await interaction.reply(
-        componentsV2(["Could not load your guild data for this server."])
+        await componentsV2(["Could not load your guild data for this server."])
       );
       return;
     }
@@ -78,7 +76,7 @@ export default new Command({
 
     if (!nitroBoosting) {
       await interaction.reply(
-        componentsV2([
+        await componentsV2([
           "**Uh oh!**",
           "You must be boosting this server with Nitro to use this command.",
         ])
@@ -101,7 +99,7 @@ export default new Command({
       case "create": {
         if (boosterRecord.customRole) {
           await interaction.reply(
-            componentsV2([
+            await componentsV2([
               "You already have a custom role.",
               "Use `/role edit` to change it.",
             ])
@@ -115,7 +113,7 @@ export default new Command({
 
         if (!/^#[0-9a-fA-F]{6}$/.test(color)) {
           await interaction.reply(
-            componentsV2([
+            await componentsV2([
               "Invalid color.",
               "Use a hex color like `#ff0000`.",
             ])
@@ -128,14 +126,14 @@ export default new Command({
         const role = await createCustomRole(guild, member, name, color as ColorResolvable, gradient as ColorResolvable);
 
         await interaction.editReply(
-          componentsV2([`**Custom role created!**`, `${role} is ready to use.`])
+          await componentsV2([`**Custom role created!**`, `${role} is ready to use.`])
         );
         break;
       }
       case "edit": {
         if (!boosterRecord.customRole?.discordRoleId) {
           await interaction.reply(
-            componentsV2(["You don't have a custom role yet.", "Use `/role create` first."])
+            await componentsV2(["You don't have a custom role yet.", "Use `/role create` first."])
           );
           return;
         }
@@ -145,7 +143,7 @@ export default new Command({
 
         if (color && !/^#[0-9a-fA-F]{6}$/.test(color as string)) {
           await interaction.reply(
-            componentsV2([
+            await componentsV2([
               "Invalid color.",
               "Use a hex color like `#ff0000`.",
             ])
@@ -158,23 +156,23 @@ export default new Command({
         const role = await updateCustomRole(guild, interaction.user.id, name, color);
         if (!role) {
           await interaction.editReply(
-            componentsV2(["Couldn't update that role.", "It may have been deleted manually."])
+            await componentsV2(["Couldn't update that role.", "It may have been deleted manually."])
           );
           return;
         }
 
-        await interaction.editReply(componentsV2(["**Custom role updated.**"]));
+        await interaction.editReply(await componentsV2(["**Custom role updated.**"]));
         break;
       }
       case "delete": {
         if (!boosterRecord.customRole?.discordRoleId) {
-          await interaction.reply(componentsV2(["You don't have a custom role to delete."]));
+          await interaction.reply(await componentsV2(["You don't have a custom role to delete."]));
           return;
         }
 
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         await deleteCustomRole(guild, interaction.user.id);
-        await interaction.editReply(componentsV2(["**Custom role deleted.**"]));
+        await interaction.editReply(await componentsV2(["**Custom role deleted.**"]));
         return;
       }
     }
