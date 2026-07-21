@@ -10,6 +10,10 @@ export async function resolveColor(): Promise<ColorResolvable> {
 
     const guildid = process.env.GUILD_ID! || process.env.MASTER_GUILD!;
 
+    if (!guildid) {
+        return SystemColors.main;
+    }
+
     if (cachedColors.has(guildid)) {
         return cachedColors.get(guildid)!;
     }
