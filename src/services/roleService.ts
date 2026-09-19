@@ -16,18 +16,22 @@ import {
   getCustomRole,
   patchCustomRoleStoredName,
 } from "./boosterService.js";
+import { auditLog } from "./auditService.js";
+import { prisma } from "../libs/database.js";
+import type { Prisma } from "../generated/prisma/client.js";
 import { logger } from "../libs/logger.js";
 
-export interface BoostLevelRole {
+export interface LevelRoleConfig {
   minBoosts: number;
-  roleId: string;
+  discordRoleId: string;
+  name?: string;
 }
 
-const BOOST_LEVEL_ROLES: BoostLevelRole[] = [
-  // { minBoosts: 1, roleId: "ROLE_ID_FOR_1X" },
-  // { minBoosts: 3, roleId: "ROLE_ID_FOR_3X" },
-  // { minBoosts: 5, roleId: "ROLE_ID_FOR_5X" },
-];
+export interface StyleTiers {
+  gradientMinBoosts: number;
+  holographicMinBoosts: number;
+  roleIconMinBoosts: number;
+}
 
 const GRADIENT_SUPPORT_FEATURE = "ENHANCED_ROLE_COLORS" as GuildFeature;
 const ROLE_ICONS_FEATURE = "ROLE_ICONS" as GuildFeature;
@@ -40,12 +44,55 @@ export function guildSupportsRoleIcons(guild: Guild): boolean {
   return guild.features.includes(ROLE_ICONS_FEATURE);
 }
 
+function isLevelRoleConfig(value: unknown): value is LevelRoleConfig {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.minBoosts === "number" &&
+    typeof v.discordRoleId === "string"
+  );
+}
+
+export async function getLevelRoleConfig(
+  discordGuildId: string
+): Promise<LevelRoleConfig[]> {
+  const guild = await prisma.guild.findUnique({
+    where: { discordId: discordGuildId },
+  });
+  const raw = guild?.levelRoles;
+  if (!Array.isArray(raw)) return [];
+  const list = raw as unknown[];
+  return list.filter(isLevelRoleConfig);
+}
+
+export async function setLevelRoleConfig(
+  discordGuildId: string,
+  config: LevelRoleConfig[]
+): Promise<void> {
+  await prisma.guild.update({
+    where: { discordId: discordGuildId },
+    data: { levelRoles: config as unknown as Prisma.InputJsonValue },
+  });
+}
+
+export async function getStyleTiers(discordGuildId: string): Promise<StyleTiers> {
+  const guild = await prisma.guild.findUnique({
+    where: { discordId: discordGuildId },
+  });
+  return {
+    gradientMinBoosts: guild?.gradientMinBoosts ?? 2,
+    holographicMinBoosts: guild?.holographicMinBoosts ?? 3,
+    roleIconMinBoosts: guild?.roleIconMinBoosts ?? 3,
+  };
+}
+
 type RoleStyle = "solid" | "gradient" | "holographic";
 
 export interface CustomRoleCreateOptions {
   gradientColor?: ColorResolvable;
   holographic?: boolean;
   icon?: string;
+  silent?: boolean;
 }
 
 export interface CustomRoleEditOptions {
@@ -54,6 +101,34 @@ export interface CustomRoleEditOptions {
   gradientColor?: ColorResolvable;
   holographic?: boolean;
   icon?: string;
+}
+
+export interface StoredRoleStyle {
+  discordRoleId: string;
+  name: string | null;
+  color: string | null;
+  gradientColor: string | null;
+  holographic: boolean | null;
+  icon: string | null;
+}
+
+export async function restoreCustomRole(
+  guild: Guild,
+  member: GuildMember,
+  record: StoredRoleStyle
+): Promise<Role | null> {
+  return createCustomRole(
+    guild,
+    member,
+    record.name || "Custom Booster Role",
+    (record.color as ColorResolvable) ?? "#000000",
+    {
+      gradientColor: (record.gradientColor as ColorResolvable) ?? undefined,
+      holographic: record.holographic ?? false,
+      icon: record.icon ?? undefined,
+      silent: true,
+    },
+  );
 }
 
 function buildRoleColors(
@@ -88,15 +163,16 @@ export async function assignLevelRoles(
   member: GuildMember,
   boostCount: number
 ): Promise<void> {
-  if (BOOST_LEVEL_ROLES.length === 0) return;
+  const levelRoles = await getLevelRoleConfig(member.guild.id);
+  if (levelRoles.length === 0) return;
 
-  const eligibleRoleIds = BOOST_LEVEL_ROLES
+  const eligibleRoleIds = levelRoles
     .filter((lr) => boostCount >= lr.minBoosts)
-    .map((lr) => lr.roleId);
+    .map((lr) => lr.discordRoleId);
 
-  const ineligibleRoleIds = BOOST_LEVEL_ROLES
+  const ineligibleRoleIds = levelRoles
     .filter((lr) => boostCount < lr.minBoosts)
-    .map((lr) => lr.roleId);
+    .map((lr) => lr.discordRoleId);
 
   for (const roleId of eligibleRoleIds) {
     if (!member.roles.cache.has(roleId)) {
@@ -128,15 +204,15 @@ export async function assignLevelRoles(
 }
 
 export async function removeAllLevelRoles(member: GuildMember): Promise<void> {
-  for (const lr of BOOST_LEVEL_ROLES) {
-    if (member.roles.cache.has(lr.roleId)) {
-      const role = member.guild.roles.cache.get(lr.roleId);
-      if (role) {
-        try {
-          await member.roles.remove(role);
-        } catch (error) {
-          logger.error(`Failed to remove level role ${role.name} (${lr.roleId}) from ${member.user.tag}:`, error);
-        }
+  const levelRoles = await getLevelRoleConfig(member.guild.id);
+
+  for (const lr of levelRoles) {
+    const role = member.guild.roles.cache.get(lr.discordRoleId);
+    if (role && member.roles.cache.has(lr.discordRoleId)) {
+      try {
+        await member.roles.remove(role);
+      } catch (error) {
+        logger.error(`Failed to remove level role ${role.name} (${lr.discordRoleId}) from ${member.user.tag}:`, error);
       }
     }
   }
@@ -152,15 +228,19 @@ export async function createCustomRole(
   const botMember = guild.members.me;
   if (!botMember?.permissions.has(PermissionFlagsBits.ManageRoles)) {
     logger.error(`Bot lacks ManageRoles permission in guild ${guild.id}`);
-    await member.send("I don't have permission to manage roles. Please contact an admin.").catch(() => {});
+    if (!options.silent) {
+      await member.send("I don't have permission to manage roles. Please contact an admin.").catch(() => {});
+    }
     return null;
   }
   const botHighestRole = botMember.roles.highest;
   const newRolePosition = botHighestRole.position - 1;
-  
+
   if (newRolePosition < 0) {
     logger.error(`Bot's highest role is too low to create new roles in guild ${guild.id}`);
-    await member.send("I cannot create roles because my highest role is too low. Please move my role higher in the role hierarchy.").catch(() => {});
+    if (!options.silent) {
+      await member.send("I cannot create roles because my highest role is too low. Please move my role higher in the role hierarchy.").catch(() => {});
+    }
     return null;
   }
 
@@ -201,7 +281,9 @@ export async function createCustomRole(
     } catch (addError) {
       logger.error(`Failed to add custom role ${role.id} to ${member.user.tag}:`, addError);
       await role.delete();
-      await member.send(`I created your custom role but couldn't assign it to you due to permission issues. Please contact an admin.`).catch(() => {});
+      if (!options.silent) {
+        await member.send(`I created your custom role but couldn't assign it to you due to permission issues. Please contact an admin.`).catch(() => {});
+      }
       return null;
     }
 
@@ -217,17 +299,31 @@ export async function createCustomRole(
         options.icon && supportsRoleIcons && roleIcon ? options.icon : null,
     });
 
+    if (!options.silent) {
+      await auditLog(guild, {
+        type: "success",
+        title: "Custom role created",
+        description: `<@${member.id}> created their custom role.`,
+        fields: [
+          { name: "User", value: `<@${member.id}>`, inline: true },
+          { name: "Role", value: `<@&${role.id}>`, inline: true },
+        ],
+      });
+    }
+
     return role;
   } catch (error) {
     logger.error(`Failed to create custom role for ${member.user.tag} in guild ${guild.id}:`, error);
-    
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    if (errorMessage.includes("Missing Permissions")) {
-      await member.send("I don't have permission to create roles. Please make sure I have the 'Manage Roles' permission and my role is high enough in the hierarchy.").catch(() => {});
-    } else {
-      await member.send("Failed to create your custom role due to an unexpected error. Please try again or contact an admin.").catch(() => {});
+
+    if (!options.silent) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes("Missing Permissions")) {
+        await member.send("I don't have permission to create roles. Please make sure I have the 'Manage Roles' permission and my role is high enough in the hierarchy.").catch(() => {});
+      } else {
+        await member.send("Failed to create your custom role due to an unexpected error. Please try again or contact an admin.").catch(() => {});
+      }
     }
-    
+
     return null;
   }
 }
@@ -250,6 +346,17 @@ export async function deleteCustomRole(
   }
 
   await setCustomRole(userId, guild.id, null);
+
+  await auditLog(guild, {
+    type: "warning",
+    title: "Custom role deleted",
+    description: `<@${userId}> deleted their custom role.`,
+    fields: [
+      { name: "User", value: `<@${userId}>`, inline: true },
+      { name: "Role", value: `<@&${customRole.discordRoleId}>`, inline: true },
+    ],
+  });
+
   return true;
 }
 
@@ -342,17 +449,27 @@ export async function updateCustomRole(
       });
     }
 
+    await auditLog(guild, {
+      type: "info",
+      title: "Custom role updated",
+      description: `<@${userId}> updated their custom role.`,
+      fields: [
+        { name: "User", value: `<@${userId}>`, inline: true },
+        { name: "Role", value: `<@&${role.id}>`, inline: true },
+      ],
+    });
+
     return role;
   } catch (error) {
     logger.error(`Failed to update custom role ${customRole.discordRoleId} for user ${userId}:`, error);
-    
+
     if (error instanceof Error && error.message.includes("Missing Permissions")) {
       const member = await guild.members.fetch(userId).catch(() => null);
       if (member) {
         await member.send("I couldn't update your custom role due to missing permissions. Please contact an admin to check my role position.").catch(() => {});
       }
     }
-    
+
     return null;
   }
 }

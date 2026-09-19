@@ -12,6 +12,7 @@ import {
   deleteCustomRole,
   guildSupportsGradient,
   guildSupportsRoleIcons,
+  getStyleTiers,
 } from "../services/roleService.js";
 import { Command } from "../base/classes/command.js";
 import { Container } from "../base/functions/embed.js";
@@ -177,19 +178,45 @@ export default new Command({
 
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
+        const tiers = await getStyleTiers(guild.id);
+        const boostCount = boosterRecord.boostCounts ?? 0;
+
+        let finalGradient = gradient as ColorResolvable | undefined;
+        let finalHolographic = holographic;
+        let finalIcon = icon ?? undefined;
+
+        const styleNotes: string[] = [];
+        if (finalHolographic && boostCount < tiers.holographicMinBoosts) {
+          finalHolographic = false;
+          styleNotes.push(
+            `Holographic styling requires **${tiers.holographicMinBoosts} boosts** — falling back to your requested color.`,
+          );
+        } else if (finalGradient && boostCount < tiers.gradientMinBoosts) {
+          finalGradient = undefined;
+          styleNotes.push(
+            `Gradient styling requires **${tiers.gradientMinBoosts} boosts** — falling back to a solid color.`,
+          );
+        }
+        if (finalIcon && boostCount < tiers.roleIconMinBoosts) {
+          finalIcon = undefined;
+          styleNotes.push(
+            `Role icons require **${tiers.roleIconMinBoosts} boosts** — skipping the icon.`,
+          );
+        }
+
         const role = await createCustomRole(guild, member, name, color as ColorResolvable, {
-          gradientColor: gradient as ColorResolvable | undefined,
-          holographic,
-          icon: icon ?? undefined,
+          gradientColor: finalGradient,
+          holographic: finalHolographic,
+          icon: finalIcon,
         });
 
-        const notes: string[] = [];
-        if ((gradient || holographic) && !supportsGradient) {
+        const notes: string[] = [...styleNotes];
+        if ((finalGradient || finalHolographic) && !supportsGradient) {
           notes.push(
             "This server hasn't unlocked gradient or holographic roles yet, so only your main color was applied."
           );
         }
-        if (icon && !supportsRoleIcons) {
+        if (finalIcon && !supportsRoleIcons) {
           notes.push(
             "This server hasn't unlocked role icons yet, so your icon was skipped."
           );
@@ -250,12 +277,38 @@ export default new Command({
 
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
+        const tiers = await getStyleTiers(guild.id);
+        const boostCount = boosterRecord.boostCounts ?? 0;
+
+        let passGradient = gradient;
+        let passHolographic = holographic;
+        let passIcon = icon;
+        const styleNotes: string[] = [];
+
+        if (holographic === true && boostCount < tiers.holographicMinBoosts) {
+          passHolographic = undefined;
+          styleNotes.push(
+            `Holographic styling requires **${tiers.holographicMinBoosts} boosts** — leaving it unchanged.`,
+          );
+        } else if (gradient !== undefined && boostCount < tiers.gradientMinBoosts) {
+          passGradient = undefined;
+          styleNotes.push(
+            `Gradient styling requires **${tiers.gradientMinBoosts} boosts** — leaving it unchanged.`,
+          );
+        }
+        if (icon !== undefined && boostCount < tiers.roleIconMinBoosts) {
+          passIcon = undefined;
+          styleNotes.push(
+            `Role icons require **${tiers.roleIconMinBoosts} boosts** — leaving the current icon.`,
+          );
+        }
+
         const role = await updateCustomRole(guild, interaction.user.id, {
           name,
           color,
-          gradientColor: gradient,
-          holographic,
-          icon,
+          gradientColor: passGradient,
+          holographic: passHolographic,
+          icon: passIcon,
         });
         if (!role) {
           await interaction.editReply(
@@ -264,7 +317,7 @@ export default new Command({
           return;
         }
 
-        const notes: string[] = [];
+        const notes: string[] = [...styleNotes];
         if ((gradient || holographic) && !supportsGradient) {
           notes.push(
             "This server hasn't unlocked gradient or holographic roles yet, so only your main color was applied."

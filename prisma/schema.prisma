@@ -13,13 +13,17 @@ datasource db {
 }
 
 model Guild {
-  id          String    @id @default(cuid())
-  discordId   String    @unique
-  name        String
-  iconUrl     String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  boosters    Booster[]
+  id                   String    @id @default(cuid())
+  discordId            String    @unique
+  name                 String
+  iconUrl              String?
+  gradientMinBoosts    Int       @default(2)
+  holographicMinBoosts Int       @default(3)
+  roleIconMinBoosts    Int       @default(3)
+  levelRoles           Json?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  boosters             Booster[]
 }
 
 model Booster {

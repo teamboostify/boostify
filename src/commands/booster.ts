@@ -16,7 +16,13 @@ import {
   getTotalBoosts,
   registerBoost,
   removeBoost,
+  ensureGuild,
 } from "../services/boosterService.js";
+import {
+  setLevelRoleConfig,
+  getLevelRoleConfig,
+  assignLevelRoles,
+} from "../services/roleService.js";
 import { Command } from "../base/classes/command.js";
 import { logger } from "../libs/logger.js";
 import { Container, Embed, Accent } from "../base/functions/embed.js";
@@ -69,8 +75,40 @@ export default new Command({
     )
     .addSubcommand((sub) =>
       sub.setName("stats").setDescription("View server boost statistics"),
+    )
+    .addSubcommandGroup((group) =>
+      group
+        .setName("roles")
+        .setDescription("Configure boost reward roles")
+        .addSubcommand((sub) =>
+          sub
+            .setName("add")
+            .setDescription("Set a reward role for a boost count")
+            .addRoleOption((opt) =>
+              opt.setName("role").setDescription("The reward role").setRequired(true),
+            )
+            .addIntegerOption((opt) =>
+              opt
+                .setName("min-boosts")
+                .setDescription("Minimum boosts to unlock this role")
+                .setRequired(true)
+                .setMinValue(1),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("remove")
+            .setDescription("Remove a reward role")
+            .addRoleOption((opt) =>
+              opt.setName("role").setDescription("The reward role").setRequired(true),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub.setName("list").setDescription("List configured reward roles"),
+        ),
     ),
   async execute(interaction) {
+    const group = interaction.options.getSubcommandGroup();
     const sub = interaction.options.getSubcommand();
 
     const discordGuild = interaction.guild;
@@ -83,6 +121,72 @@ export default new Command({
     }
 
     await interaction.deferReply();
+
+    if (group === "roles") {
+      await ensureGuild(discordGuild.id, discordGuild.name, discordGuild.iconURL());
+
+      const config = await getLevelRoleConfig(discordGuild.id);
+
+      if (sub === "list") {
+        if (config.length === 0) {
+          await interaction.editReply({
+            content: "No reward roles configured yet. Use `/booster roles add` to add one.",
+          });
+          return;
+        }
+
+        const embed = await Embed();
+        embed.setTitle("Reward Roles")
+          .setDescription(
+            config
+              .map((lr) => `<@&${lr.discordRoleId}> — **${lr.minBoosts} boost(s)**`)
+              .join("\n"),
+          )
+          .setTimestamp();
+
+        await interaction.editReply({ embeds: [embed] });
+        return;
+      }
+
+      if (sub === "add") {
+        const role = interaction.options.getRole("role", true);
+        const minBoosts = interaction.options.getInteger("min-boosts", true);
+
+        const next = [
+          ...config.filter((lr) => lr.discordRoleId !== role.id),
+          { minBoosts, discordRoleId: role.id, name: role.name },
+        ];
+
+        await setLevelRoleConfig(discordGuild.id, next);
+
+        await interaction.editReply({
+          content: `Set <@&${role.id}> as a reward role at **${minBoosts} boost(s)**.`,
+        });
+        return;
+      }
+
+      if (sub === "remove") {
+        const role = interaction.options.getRole("role", true);
+        const removed = config.filter((lr) => lr.discordRoleId === role.id);
+
+        await setLevelRoleConfig(
+          discordGuild.id,
+          config.filter((lr) => lr.discordRoleId !== role.id),
+        );
+
+        if (removed.length === 0) {
+          await interaction.editReply({
+            content: `No reward role found for <@&${role.id}>.`,
+          });
+          return;
+        }
+
+        await interaction.editReply({
+          content: `Removed <@&${role.id}> as a reward role.`,
+        });
+        return;
+      }
+    }
 
     if (sub === "check") {
       const user = interaction.options.getUser("user", true);
@@ -250,6 +354,8 @@ export default new Command({
       }
 
       const boostWord = amount === 1 ? "boost" : "boosts";
+      await assignLevelRoles(targetMember, updated.boostCounts ?? amount);
+
       const container = await Container();
         container.addTextDisplayComponents(
           new TextDisplayBuilder().setContent(`**Boost successfully added!**`),
@@ -275,6 +381,13 @@ export default new Command({
           content: `No booster record found for ${user.tag}.`,
         });
         return;
+      }
+
+      const targetMember = await discordGuild.members
+        .fetch(user.id)
+        .catch(() => null);
+      if (targetMember) {
+        await assignLevelRoles(targetMember, updated.boostCounts);
       }
 
       await interaction.editReply({

@@ -16,7 +16,9 @@ import {
 import {
   assignLevelRoles,
   removeAllLevelRoles,
+  restoreCustomRole,
 } from "../services/roleService.js";
+import { auditLog } from "../services/auditService.js";
 import { logger } from "../libs/logger.js";
 import { prisma } from "../libs/database.js";
 import { DiscordClient } from "../base/types/discord.js";
@@ -117,6 +119,24 @@ async function onBoostStart(member: GuildMember): Promise<void> {
 
   await clearPendingCustomRoleDeletion(record.id);
   await assignLevelRoles(member, record.boostCounts ?? 1);
+
+  if (record.customRole) {
+    const storedRole =
+      guild.roles.cache.get(record.customRole.discordRoleId) ??
+      (await guild.roles.fetch(record.customRole.discordRoleId).catch(() => null));
+
+    if (!storedRole) {
+      const restored = await restoreCustomRole(guild, member, record.customRole);
+      if (restored) {
+        await auditLog(guild, {
+          type: "success",
+          title: "Custom role restored",
+          description: `<@${member.id}>'s custom role was missing, so it was recreated after their re-boost.`,
+          fields: [{ name: "User", value: `<@${member.id}>`, inline: true }],
+        });
+      }
+    }
+  }
 
   const greetChannel = guild.channels.cache.get(settings.greetChannelId) as
     | TextChannel

@@ -7,6 +7,7 @@
     "outDir": "dist",
     "rootDir": "src",
     "strict": true,
+    "types": ["bun"],
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,

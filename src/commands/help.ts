@@ -81,9 +81,28 @@ Displays aggregate booster statistics for the current server.
 **Purpose**
 Provides administrators with an overview of booster activity and historical engagement.
 
+### \`/booster roles\`
+
+Manages the server's boost reward roles. Reward roles are granted automatically as a member's recorded boost count reaches each configured threshold, and removed when it falls below it.
+
+**Subcommands**
+* \`/booster roles add\` — \`role\`, \`min-boosts\` — Sets (or re-sets) a reward role for a minimum boost count.
+* \`/booster roles remove\` — \`role\` — Removes a reward role from the configuration.
+* \`/booster roles list\` — Displays the currently configured reward roles.
+
+**Behaviour**
+* Reward roles are assigned on boost start and adjusted whenever boost counts change.
+* When a booster stops boosting, all configured reward roles are removed.
+
+**Intended Usage**
+* Granting escalating perks (e.g. a premium role at 3 boosts, another at 5).
+* Server owners can customise the boost-count thresholds themselves.
+
 ## Permissions
 
 Use of the Booster management system requires the \`Manage Server\` permission.
+
+Reward roles are also controlled through this system.
 
 ## Additional Information
 
@@ -269,6 +288,7 @@ Creates a new custom booster role.
 * Colours must use hexadecimal formatting such as \`#ff0000\`.
 * Gradient and holographic styles require the \`ENHANCED_ROLE_COLORS\` guild perk (unlocked with 3 Server Boosts).
 * Role icons require the \`ROLE_ICONS\` guild perk.
+* Boost-tiers may further restrict styling: a member whose recorded boost count is below a server's threshold cannot request gradient, holographic, or icon styling, depending on the style.
 
 **Examples**
 * \`/role create name:Elite color:#ff69b4\`
@@ -358,6 +378,40 @@ The system determines eligibility based solely on active Nitro boosting status.
 * Gradient and holographic styling depends on the \`ENHANCED_ROLE_COLORS\` guild feature, role icons on the \`ROLE_ICONS\` guild feature.
 
 * All custom role data (including styling) is scoped to the server where the command is executed.`,
+
+changelog:
+`## Overview
+
+> The Changelog command displays the most recent Boostify releases straight from the project's GitHub repository, so you can keep up to date with the latest features, fixes, and improvements.
+
+## Command Usage
+
+### \`/changelog\`
+
+Shows the latest five releases.
+
+**Information Returned**
+* Latest release name and version.
+* Release notes (when provided by the maintainers).
+* When the release was published.
+* Whether the release is stable or a pre-release.
+* A list of previous releases linking back to GitHub.
+
+**Behaviour**
+* Fetches data in real time from the GitHub Releases API.
+* Attachment of a direct link to view the release on GitHub.
+
+## Permissions
+
+No special permissions are required to use this command.
+
+Any member with access to application commands may execute it.
+
+## Additional Information
+
+* Release information is retrieved live from [GitHub](https://github.com/teamboostify/boostify).
+
+* If the GitHub API is temporarily unreachable, the command reports an error instead of failing silently.`,
 
 config:
 `## Overview

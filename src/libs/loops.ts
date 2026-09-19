@@ -5,6 +5,11 @@ import { logger } from "./logger.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
+interface LoopModule {
+  schedule: string;
+  execute: () => void | Promise<void>;
+}
+
 export async function loadLoops() {
   const loops = path.join(__dirname, "..", "loops");
   if (!fs.existsSync(loops)) {
@@ -19,13 +24,13 @@ export async function loadLoops() {
     .filter((file) => file.endsWith(".ts") || file.endsWith(".js"));
 
   if (loopFiles.length === 0) {
-    logger.warn("No command files found — nothing to register.");
+    logger.warn("No loop files found — nothing to schedule.");
     return;
   }
 
   for (const file of loopFiles) {
     const filePath = path.join(loops, file);
-    let fileInfo;
+    let fileInfo: LoopModule | undefined;
     try {
       fileInfo = (await import(pathToFileURL(filePath).href)).default;
     } catch (err) {
@@ -33,29 +38,27 @@ export async function loadLoops() {
       continue;
     }
 
-    if (!fileInfo?.runEvery || !fileInfo?.execute) {
-      logger.warn(`Skipping ${file} - missing runEvery or execute`);
+    if (!fileInfo?.schedule || typeof fileInfo.execute !== "function") {
+      logger.warn(`Skipping ${file} - missing schedule or execute`);
       continue;
     }
 
     const run = async () => {
-      if (running) return;
-      running = true;
       try {
         await fileInfo.execute();
       } catch (err) {
         logger.error(`Loop "${file}" failed: ${err}`);
-      } finally {
-        running = false;
       }
     };
 
-    let running = false;
-    void run();
-    setInterval(() => {
+    try {
+      Bun.cron(fileInfo.schedule, () => run(), { tz: "UTC" });
       void run();
-    }, fileInfo.runEvery * 1000);
-
-    logger.success(`Loaded loop "${file}"`);
+      logger.success(`Loaded loop "${file}" (schedule: ${fileInfo.schedule})`);
+    } catch (err) {
+      logger.error(
+        `Failed to schedule loop "${file}" with "${fileInfo.schedule}": ${err}`,
+      );
+    }
   }
 }

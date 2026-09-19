@@ -15,6 +15,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/bun": "^1.4.2",
     "@types/node": "^20.19.39",
     "@types/pg": "^8.20.0",
     "prisma": "^7.8.0",

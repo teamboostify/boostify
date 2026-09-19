@@ -1,7 +1,7 @@
 import { prisma } from "../libs/database.js"
 
 export default {
-  runEvery: 60, // seconds
+  schedule: "*/30 * * * *", // every 30 minutes
   async execute() {
     await prisma.booster.deleteMany({
       where: {
