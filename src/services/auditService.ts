@@ -45,7 +45,12 @@ export async function auditLog(
   const channel = await getLogChannel(guild);
   if (!channel) return;
 
-  const color = Accent[entry.type ?? "info"];
+  const color =
+    entry.type === "warning"
+      ? Accent.warning
+      : entry.type === "error"
+        ? Accent.error
+        : undefined;
 
   const embed = await Embed(color, { footer: entry.footer });
   embed.setTitle(entry.title);

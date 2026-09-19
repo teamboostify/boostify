@@ -1,14 +1,14 @@
-import { EmbedBuilder, ColorResolvable, ContainerBuilder, resolveColor as resolveColorValue } from "discord.js";
+import { EmbedBuilder, ColorResolvable, ContainerBuilder, resolveColor as resolveColorValue, Colors } from "discord.js";
 import { resolveColor } from "./color-resolve.js";
 import { client } from "../../index.js";
 import { SystemColors } from "../../libs/colors.js";
 
 export const Accent = {
   brand: SystemColors.main,
-  success: 0x57f287,
-  info: 0x70d7ff,
-  warning: 0xfee75c,
-  error: 0xed4245,
+  success: SystemColors.main,
+  info: SystemColors.main,
+  warning: Colors.Yellow,
+  error: Colors.Red,
 } as const;
 
 export interface EmbedOptions {
@@ -19,7 +19,10 @@ export async function Embed(
   color?: ColorResolvable,
   options: EmbedOptions = {},
 ): Promise<EmbedBuilder> {
-  const embedColor = color ?? (await resolveColor());
+  const embedColor =
+    color === undefined || color === SystemColors.main
+      ? await resolveColor()
+      : color;
   const embed = new EmbedBuilder().setColor(embedColor);
 
   if (options.footer !== false && options.footer !== null) {
@@ -33,7 +36,10 @@ export async function Embed(
 }
 
 export async function Container(color?: ColorResolvable): Promise<ContainerBuilder> {
-  const embedColor = color ?? (await resolveColor());
+  const embedColor =
+    color === undefined || color === SystemColors.main
+      ? await resolveColor()
+      : color;
   const accentColor = resolveColorValue(embedColor);
 
   return new ContainerBuilder().setAccentColor(accentColor);
