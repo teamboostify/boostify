@@ -1,6 +1,5 @@
 import {
   SlashCommandBuilder,
-  EmbedBuilder,
   ButtonBuilder,
   ButtonStyle,
   ActionRowBuilder,
@@ -91,7 +90,7 @@ export default new Command({
         }
       )
       .setFooter({
-        text: `Requested by ${interaction.user.tag}`,
+        text: `Boostify • Requested by ${interaction.user.tag}`,
         iconURL: interaction.user.displayAvatarURL()
       })
       .setTimestamp();

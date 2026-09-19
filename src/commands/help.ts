@@ -239,7 +239,7 @@ Any member with access to application commands may execute it.
 role:
 `## Overview
 
-> The Custom Role system allows active Nitro boosters to create and manage a personalised role within the server. Eligible members can customise their role's name and colour while maintaining booster benefits.
+> The Custom Role system allows active Nitro boosters to create and manage a personalised role within the server. Eligible members can customise their role's name, colour, and even apply gradient, holographic, or icon styling while maintaining booster benefits.
 
 Custom roles are exclusive to members currently boosting the server.
 
@@ -253,22 +253,27 @@ Creates a new custom booster role.
 * \`name\` — The name of the custom role.
 * \`color\` — The primary role colour in hexadecimal format.
 * \`gradient\` *(Optional)* — Additional colour used for gradient role styling.
+* \`holographic\` *(Optional)* — Applies the holographic role style. Overrides the gradient.
+* \`icon\` *(Optional)* — Direct image URL used as the role icon.
 
 **Behaviour**
 * Verifies that the member is actively boosting the server.
 * Automatically creates a booster profile if one does not already exist.
 * Creates a new Discord role.
 * Assigns the newly created role to the member.
-* Stores the role information for future management.
+* Stores the role information and styling for future management.
 
 **Requirements**
 * The member must currently be boosting the server.
 * The member cannot already own a custom role.
 * Colours must use hexadecimal formatting such as \`#ff0000\`.
+* Gradient and holographic styles require the \`ENHANCED_ROLE_COLORS\` guild perk (unlocked with 3 Server Boosts).
+* Role icons require the \`ROLE_ICONS\` guild perk.
 
 **Examples**
 * \`/role create name:Elite color:#ff69b4\`
 * \`/role create name:Galaxy color:#6a5acd gradient:#ff69b4\`
+* \`/role create name:Champion color:#a45ee1 holographic:True\`
 
 ### \`/role edit\`
 
@@ -277,11 +282,15 @@ Updates an existing custom booster role.
 **Parameters**
 * \`name\` *(Optional)* — The new role name.
 * \`color\` *(Optional)* — The new hexadecimal colour.
+* \`gradient\` *(Optional)* — The new gradient colour.
+* \`holographic\` *(Optional)* — Apply or remove the holographic style.
+* \`icon\` *(Optional)* — The new role icon image URL.
 
 **Behaviour**
 * Updates the stored Discord role.
 * Only supplied values are modified.
 * Existing settings remain unchanged if omitted.
+* Changing the main colour preserves any existing gradient or holographic styling.
 
 **Requirements**
 * The member must currently be boosting the server.
@@ -290,9 +299,8 @@ Updates an existing custom booster role.
 **Examples**
 * \`/role edit name:Legend\`
 * \`/role edit color:#00ff00\`
-* \`/role edit name:Legend color:#00ff00\`
-
-### \`/role delete\`
+* \`/role edit name:Legend color:#00ff00 gradient:#8b5cf6\`
+* \`/role edit holographic:False\`
 
 Deletes the member's custom booster role.
 
@@ -347,9 +355,9 @@ The system determines eligibility based solely on active Nitro boosting status.
 
 * If a role is deleted manually outside of the bot, some actions may fail until the role is recreated.
 
-* Gradient support depends on the implementation provided by the role service.
+* Gradient and holographic styling depends on the \`ENHANCED_ROLE_COLORS\` guild feature, role icons on the \`ROLE_ICONS\` guild feature.
 
-* All custom role data is scoped to the server where the command is executed.`,
+* All custom role data (including styling) is scoped to the server where the command is executed.`,
 
 config:
 `## Overview

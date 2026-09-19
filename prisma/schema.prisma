@@ -46,6 +46,10 @@ model CustomRole {
   booster           Booster   @relation(fields: [boosterId], references: [id], onDelete: Cascade)
   discordRoleId     String    @unique
   name              String    @default("")
+  color             String?
+  gradientColor     String?
+  holographic       Boolean   @default(false)
+  icon              String?
   deleteScheduledAt DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt

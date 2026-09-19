@@ -249,11 +249,19 @@ export async function removeBoostCount(
   });
 }
 
+export interface CustomRoleData {
+  name?: string | null;
+  color?: string | null;
+  gradientColor?: string | null;
+  holographic?: boolean | null;
+  icon?: string | null;
+}
+
 export async function setCustomRole(
   userId: string,
   guildDiscordId: string,
   discordRoleId: string | null,
-  roleName?: string | null
+  data?: CustomRoleData
 ) {
   const guild = await prisma.guild.findUnique({
     where: { discordId: guildDiscordId },
@@ -270,18 +278,32 @@ export async function setCustomRole(
     return null;
   }
 
-  const name = roleName?.trim() ?? "";
+  const name = data?.name?.trim() ?? "";
 
   return prisma.customRole.upsert({
     where: { boosterId: booster.id },
     update: {
       discordRoleId,
-      ...(roleName !== undefined && roleName !== null ? { name } : {}),
+      ...(name ? { name } : {}),
+      ...(data?.color !== undefined ? { color: data.color } : {}),
+      ...(data?.gradientColor !== undefined
+        ? { gradientColor: data.gradientColor }
+        : {}),
+      ...(data?.holographic !== undefined && data.holographic !== null
+        ? { holographic: data.holographic }
+        : {}),
+      ...(data?.icon !== undefined ? { icon: data.icon } : {}),
     },
     create: {
       boosterId: booster.id,
       discordRoleId,
       name,
+      ...(data?.color ? { color: data.color } : {}),
+      ...(data?.gradientColor ? { gradientColor: data.gradientColor } : {}),
+      ...(data?.holographic !== undefined && data.holographic
+        ? { holographic: true }
+        : {}),
+      ...(data?.icon ? { icon: data.icon } : {}),
     },
   });
 }

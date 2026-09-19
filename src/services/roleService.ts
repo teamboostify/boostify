@@ -3,9 +3,14 @@ import {
   GuildMember,
   Role,
   ColorResolvable,
-  resolveColor,
+  GuildFeature,
   PermissionFlagsBits,
+  Constants,
+  resolveColor,
+  RoleColorsEditResolvable,
+  RoleColorsResolvable,
 } from "discord.js";
+import axios from "axios";
 import {
   setCustomRole,
   getCustomRole,
@@ -23,6 +28,61 @@ const BOOST_LEVEL_ROLES: BoostLevelRole[] = [
   // { minBoosts: 3, roleId: "ROLE_ID_FOR_3X" },
   // { minBoosts: 5, roleId: "ROLE_ID_FOR_5X" },
 ];
+
+const GRADIENT_SUPPORT_FEATURE = "ENHANCED_ROLE_COLORS" as GuildFeature;
+const ROLE_ICONS_FEATURE = "ROLE_ICONS" as GuildFeature;
+
+export function guildSupportsGradient(guild: Guild): boolean {
+  return guild.features.includes(GRADIENT_SUPPORT_FEATURE);
+}
+
+export function guildSupportsRoleIcons(guild: Guild): boolean {
+  return guild.features.includes(ROLE_ICONS_FEATURE);
+}
+
+type RoleStyle = "solid" | "gradient" | "holographic";
+
+export interface CustomRoleCreateOptions {
+  gradientColor?: ColorResolvable;
+  holographic?: boolean;
+  icon?: string;
+}
+
+export interface CustomRoleEditOptions {
+  name?: string;
+  color?: ColorResolvable;
+  gradientColor?: ColorResolvable;
+  holographic?: boolean;
+  icon?: string;
+}
+
+function buildRoleColors(
+  style: RoleStyle,
+  color: ColorResolvable,
+  gradientColor?: ColorResolvable
+): RoleColorsEditResolvable {
+  switch (style) {
+    case "holographic":
+      return {
+        primaryColor: Constants.HolographicStyle.Primary,
+        secondaryColor: Constants.HolographicStyle.Secondary,
+        tertiaryColor: Constants.HolographicStyle.Tertiary,
+      };
+    case "gradient":
+      return { primaryColor: color, secondaryColor: gradientColor };
+    default:
+      return { primaryColor: color };
+  }
+}
+
+function colorToHex(value: ColorResolvable): string {
+  return `#${resolveColor(value).toString(16).padStart(6, "0")}`;
+}
+
+async function fetchRoleIcon(url: string): Promise<Buffer> {
+  const response = await axios.get(url, { responseType: "arraybuffer" });
+  return Buffer.from(response.data);
+}
 
 export async function assignLevelRoles(
   member: GuildMember,
@@ -87,7 +147,7 @@ export async function createCustomRole(
   member: GuildMember,
   name: string,
   color: ColorResolvable,
-  gradientColor: ColorResolvable
+  options: CustomRoleCreateOptions = {}
 ): Promise<Role | null> {
   const botMember = guild.members.me;
   if (!botMember?.permissions.has(PermissionFlagsBits.ManageRoles)) {
@@ -104,11 +164,36 @@ export async function createCustomRole(
     return null;
   }
 
+  const supportsGradient = guildSupportsGradient(guild);
+  const supportsRoleIcons = guildSupportsRoleIcons(guild);
+
+  const style: RoleStyle =
+    supportsGradient && options.holographic
+      ? "holographic"
+      : supportsGradient && options.gradientColor
+        ? "gradient"
+        : "solid";
+
+  let roleIcon: Buffer | undefined;
+  if (options.icon && supportsRoleIcons) {
+    try {
+      roleIcon = await fetchRoleIcon(options.icon);
+    } catch (error) {
+      logger.error(`Failed to fetch role icon for ${member.user.tag}:`, error);
+    }
+  }
+
   try {
     const role = await guild.roles.create({
       name,
       permissions: [],
       position: newRolePosition,
+      colors: buildRoleColors(
+        style,
+        color,
+        options.gradientColor
+      ) as RoleColorsResolvable,
+      ...(roleIcon ? { icon: roleIcon } : {}),
     });
 
     try {
@@ -120,7 +205,18 @@ export async function createCustomRole(
       return null;
     }
 
-    await setCustomRole(member.id, guild.id, role.id, role.name);
+    await setCustomRole(member.id, guild.id, role.id, {
+      name: role.name,
+      color: colorToHex(color),
+      gradientColor:
+        style === "gradient" && options.gradientColor
+          ? colorToHex(options.gradientColor)
+          : null,
+      holographic: style === "holographic",
+      icon:
+        options.icon && supportsRoleIcons && roleIcon ? options.icon : null,
+    });
+
     return role;
   } catch (error) {
     logger.error(`Failed to create custom role for ${member.user.tag} in guild ${guild.id}:`, error);
@@ -160,8 +256,7 @@ export async function deleteCustomRole(
 export async function updateCustomRole(
   guild: Guild,
   userId: string,
-  name?: string,
-  color?: ColorResolvable
+  options: CustomRoleEditOptions = {}
 ): Promise<Role | null> {
   const customRole = await getCustomRole(userId, guild.id);
   if (!customRole) return null;
@@ -169,13 +264,84 @@ export async function updateCustomRole(
   const role = guild.roles.cache.get(customRole.discordRoleId);
   if (!role) return null;
 
+  const supportsGradient = guildSupportsGradient(guild);
+  const supportsRoleIcons = guildSupportsRoleIcons(guild);
+
+  const visualChanged =
+    options.color !== undefined ||
+    options.gradientColor !== undefined ||
+    options.holographic !== undefined;
+
+  const primary: ColorResolvable | undefined =
+    options.color ?? (customRole.color as ColorResolvable) ?? role.color ?? undefined;
+  const gradient: ColorResolvable | undefined =
+    options.gradientColor ?? (customRole.gradientColor as ColorResolvable) ?? undefined;
+  const appliesHolographic =
+    options.holographic === true
+      ? true
+      : options.holographic === false
+        ? false
+        : options.gradientColor
+          ? false
+          : customRole.holographic ?? false;
+
+  const style: RoleStyle = appliesHolographic
+    ? supportsGradient
+      ? "holographic"
+      : "solid"
+    : supportsGradient && gradient
+      ? "gradient"
+      : "solid";
+
+  const editOptions: {
+    name?: string;
+    colors?: RoleColorsEditResolvable;
+    icon?: Buffer;
+  } = {};
+
+  if (options.name) editOptions.name = options.name;
+
+  if (visualChanged && primary !== undefined) {
+    const colorsPayload = buildRoleColors(style, primary, gradient);
+    const currentColors = role.colors;
+
+    if (
+      style === "solid" &&
+      (currentColors?.secondaryColor || currentColors?.tertiaryColor)
+    ) {
+      colorsPayload.secondaryColor = null;
+      colorsPayload.tertiaryColor = null;
+    }
+
+    editOptions.colors = colorsPayload;
+  }
+
+  if (options.icon !== undefined && supportsRoleIcons) {
+    try {
+      editOptions.icon = await fetchRoleIcon(options.icon);
+    } catch (error) {
+      logger.error(`Failed to fetch role icon for user ${userId}:`, error);
+    }
+  }
+
   try {
-    await role.edit({
-      ...(name ? { name } : {}),
-      ...(color ? { color } : {}),
-    });
+    await role.edit(editOptions);
 
     await patchCustomRoleStoredName(userId, guild.id, role.name);
+
+    if (visualChanged || options.icon !== undefined) {
+      await setCustomRole(userId, guild.id, role.id, {
+        name: role.name,
+        color: primary !== undefined ? colorToHex(primary) : undefined,
+        gradientColor:
+          style === "gradient" && gradient !== undefined
+            ? colorToHex(gradient)
+            : null,
+        holographic: style === "holographic",
+        icon: options.icon !== undefined ? options.icon : undefined,
+      });
+    }
+
     return role;
   } catch (error) {
     logger.error(`Failed to update custom role ${customRole.discordRoleId} for user ${userId}:`, error);

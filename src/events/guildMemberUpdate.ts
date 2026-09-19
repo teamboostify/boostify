@@ -1,7 +1,6 @@
 import "../libs/loadVariables.js";
 import {
   ContainerBuilder,
-  EmbedBuilder,
   Events,
   GuildMember,
   MessageFlags,
@@ -22,6 +21,7 @@ import { logger } from "../libs/logger.js";
 import { prisma } from "../libs/database.js";
 import { DiscordClient } from "../base/types/discord.js";
 import { SystemColors } from "../libs/colors.js";
+import { Embed, Accent } from "../base/functions/embed.js";
 
 export default {
   name: Events.GuildMemberUpdate,
@@ -122,9 +122,8 @@ async function onBoostStart(member: GuildMember): Promise<void> {
     | TextChannel
     | undefined;
 
-  const embed = new EmbedBuilder()
-    .setColor(0xf47fff)
-    .setTitle("New Server Boost! 🎉")
+  const embed = await Embed(Accent.brand);
+    embed.setTitle("New Server Boost! 🎉")
     .setDescription(`${member} has boosted the server!`)
     .addFields(
       {
@@ -144,9 +143,8 @@ async function onBoostStart(member: GuildMember): Promise<void> {
     | TextChannel
     | undefined;
 
-  const logEmbed = new EmbedBuilder()
-    .setColor(0x57f287)
-    .setTitle("Boost Started")
+  const logEmbed = await Embed(Accent.success);
+  logEmbed.setTitle("Boost Started")
     .addFields(
       {
         name: "User",
@@ -209,9 +207,8 @@ async function onBoostEnd(member: GuildMember): Promise<void> {
     | TextChannel
     | undefined;
 
-  const logEmbed = new EmbedBuilder()
-    .setColor(0xed4245)
-    .setTitle("Boost Ended")
+  const logEmbed = await Embed(Accent.error);
+  logEmbed.setTitle("Boost Ended")
     .addFields(
       {
         name: "User",

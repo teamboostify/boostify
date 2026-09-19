@@ -1,14 +1,11 @@
 import {
   SlashCommandBuilder,
-  EmbedBuilder,
   PermissionFlagsBits,
-  ContainerBuilder,
   TextDisplayBuilder,
   MessageFlags,
   SeparatorSpacingSize,
   ButtonBuilder,
   ButtonStyle,
-  Colors,
 } from "discord.js";
 import {
   getBooster,
@@ -22,7 +19,7 @@ import {
 } from "../services/boosterService.js";
 import { Command } from "../base/classes/command.js";
 import { logger } from "../libs/logger.js";
-import { Container, Embed } from "../base/functions/embed.js";
+import { Container, Embed, Accent } from "../base/functions/embed.js";
 
 export default new Command({
   info: new SlashCommandBuilder()
@@ -158,7 +155,7 @@ export default new Command({
             .setLabel("Our Support Server")
             .setURL("https://discord.gg/NUtyKs7hA6");
 
-          const container = await Container(Colors.Red)
+          const container = await Container(Accent.error)
             container.addTextDisplayComponents(
               new TextDisplayBuilder().setContent("**Uh oh!**"),
               new TextDisplayBuilder().setContent(
@@ -185,7 +182,7 @@ export default new Command({
         booster.active && booster.boostCounts > 0 && !!premiumSince;
 
       const embed = await Embed();
-        embed.setColor(booster.active ? 0xf47fff : 0x99aab5)
+        embed.setColor(booster.active ? Accent.success : Accent.info)
         .setTitle(`Booster Info: ${user.username}`)
         .setThumbnail(avatarUrl)
         .addFields(

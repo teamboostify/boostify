@@ -10,6 +10,8 @@ import {
   createCustomRole,
   updateCustomRole,
   deleteCustomRole,
+  guildSupportsGradient,
+  guildSupportsRoleIcons,
 } from "../services/roleService.js";
 import { Command } from "../base/classes/command.js";
 import { Container } from "../base/functions/embed.js";
@@ -21,6 +23,18 @@ async function componentsV2(lines: string[]) {
     flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
     components: [container],
   };
+}
+
+const HEX_COLOR_REGEX = /^#[0-9a-fA-F]{6}$/;
+const URL_REGEX = /^https?:\/\/.+/i;
+
+function isValidIcon(url: string): boolean {
+  if (!URL_REGEX.test(url)) return false;
+  try {
+    return /\.(png|jpe?g|gif|webp)(\?.*)?$/i.test(new URL(url).pathname);
+  } catch {
+    return false;
+  }
 }
 
 export default new Command({
@@ -38,7 +52,13 @@ export default new Command({
           opt.setName("color").setDescription("Hex color (e.g. #ff0000)").setRequired(true)
         )
         .addStringOption((opt) =>
-          opt.setName("gradient").setDescription("Make your role colors a gradient.")
+          opt.setName("gradient").setDescription("Second color to make your role a gradient.")
+        )
+        .addBooleanOption((opt) =>
+          opt.setName("holographic").setDescription("Apply the holographic role style (overrides gradient).")
+        )
+        .addStringOption((opt) =>
+          opt.setName("icon").setDescription("Image URL to use as the role icon.")
         )
     )
     .addSubcommand((sub) =>
@@ -50,6 +70,15 @@ export default new Command({
         )
         .addStringOption((opt) =>
           opt.setName("color").setDescription("New hex color").setRequired(false)
+        )
+        .addStringOption((opt) =>
+          opt.setName("gradient").setDescription("New gradient color").setRequired(false)
+        )
+        .addBooleanOption((opt) =>
+          opt.setName("holographic").setDescription("Apply or remove the holographic style.").setRequired(false)
+        )
+        .addStringOption((opt) =>
+          opt.setName("icon").setDescription("New role icon image URL").setRequired(false)
         )
     )
     .addSubcommand((sub) =>
@@ -93,6 +122,9 @@ export default new Command({
         guild.iconURL()
       ));
 
+    const supportsGradient = guildSupportsGradient(guild);
+    const supportsRoleIcons = guildSupportsRoleIcons(guild);
+
     const sub = interaction.options.getSubcommand();
 
     switch (sub) {
@@ -109,9 +141,11 @@ export default new Command({
 
         const name = interaction.options.getString("name", true);
         const color = interaction.options.getString("color", true);
-        const gradient = interaction.options.getString("gradient")
+        const gradient = interaction.options.getString("gradient");
+        const holographic = interaction.options.getBoolean("holographic") ?? false;
+        const icon = interaction.options.getString("icon");
 
-        if (!/^#[0-9a-fA-F]{6}$/.test(color)) {
+        if (!HEX_COLOR_REGEX.test(color)) {
           await interaction.reply(
             await componentsV2([
               "Invalid color.",
@@ -121,12 +155,52 @@ export default new Command({
           return;
         }
 
+        if (gradient && !HEX_COLOR_REGEX.test(gradient)) {
+          await interaction.reply(
+            await componentsV2([
+              "Invalid gradient color.",
+              "Use a hex color like `#00ff00`.",
+            ])
+          );
+          return;
+        }
+
+        if (icon && !isValidIcon(icon)) {
+          await interaction.reply(
+            await componentsV2([
+              "Invalid icon URL.",
+              "Use a direct image link ending in `.png`, `.jpg`, `.gif` or `.webp`.",
+            ])
+          );
+          return;
+        }
+
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-        const role = await createCustomRole(guild, member, name, color as ColorResolvable, gradient as ColorResolvable);
+        const role = await createCustomRole(guild, member, name, color as ColorResolvable, {
+          gradientColor: gradient as ColorResolvable | undefined,
+          holographic,
+          icon: icon ?? undefined,
+        });
+
+        const notes: string[] = [];
+        if ((gradient || holographic) && !supportsGradient) {
+          notes.push(
+            "This server hasn't unlocked gradient or holographic roles yet, so only your main color was applied."
+          );
+        }
+        if (icon && !supportsRoleIcons) {
+          notes.push(
+            "This server hasn't unlocked role icons yet, so your icon was skipped."
+          );
+        }
 
         await interaction.editReply(
-          await componentsV2([`**Custom role created!**`, `${role} is ready to use.`])
+          await componentsV2([
+            `**Custom role created!**`,
+            `${role} is ready to use.`,
+            ...notes.map((note) => `-# ${note}`),
+          ])
         );
         break;
       }
@@ -140,8 +214,11 @@ export default new Command({
 
         const name = interaction.options.getString("name") ?? undefined;
         const color = (interaction.options.getString("color") ?? undefined) as ColorResolvable | undefined;
+        const gradient = (interaction.options.getString("gradient") ?? undefined) as ColorResolvable | undefined;
+        const holographic = interaction.options.getBoolean("holographic") ?? undefined;
+        const icon = interaction.options.getString("icon") ?? undefined;
 
-        if (color && !/^#[0-9a-fA-F]{6}$/.test(color as string)) {
+        if (color && !HEX_COLOR_REGEX.test(color as string)) {
           await interaction.reply(
             await componentsV2([
               "Invalid color.",
@@ -151,9 +228,35 @@ export default new Command({
           return;
         }
 
+        if (gradient && !HEX_COLOR_REGEX.test(gradient as string)) {
+          await interaction.reply(
+            await componentsV2([
+              "Invalid gradient color.",
+              "Use a hex color like `#00ff00`.",
+            ])
+          );
+          return;
+        }
+
+        if (icon && !isValidIcon(icon)) {
+          await interaction.reply(
+            await componentsV2([
+              "Invalid icon URL.",
+              "Use a direct image link ending in `.png`, `.jpg`, `.gif` or `.webp`.",
+            ])
+          );
+          return;
+        }
+
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-        const role = await updateCustomRole(guild, interaction.user.id, name, color);
+        const role = await updateCustomRole(guild, interaction.user.id, {
+          name,
+          color,
+          gradientColor: gradient,
+          holographic,
+          icon,
+        });
         if (!role) {
           await interaction.editReply(
             await componentsV2(["Couldn't update that role.", "It may have been deleted manually."])
@@ -161,7 +264,24 @@ export default new Command({
           return;
         }
 
-        await interaction.editReply(await componentsV2(["**Custom role updated.**"]));
+        const notes: string[] = [];
+        if ((gradient || holographic) && !supportsGradient) {
+          notes.push(
+            "This server hasn't unlocked gradient or holographic roles yet, so only your main color was applied."
+          );
+        }
+        if (icon && !supportsRoleIcons) {
+          notes.push(
+            "This server hasn't unlocked role icons yet, so your icon was skipped."
+          );
+        }
+
+        await interaction.editReply(
+          await componentsV2([
+            "**Custom role updated.**",
+            ...notes.map((note) => `-# ${note}`),
+          ])
+        );
         break;
       }
       case "delete": {
