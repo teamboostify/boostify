@@ -157,17 +157,21 @@ export async function runBoosterMaintenance(client: Client): Promise<Maintenance
 
     const changed =
       report.deletionsScheduled + report.deletionsCleared + report.rolesRestored;
-    if (changed > 0) {
-      await auditLog(guild, {
-        type: "info",
-        title: "Booster maintenance completed",
-        description:
-          `Checked **${report.boostersChecked}** booster(s) for this server.\n` +
-          `-# Deletions scheduled: **${report.deletionsScheduled}**\n` +
+
+    const actionLine =
+      changed === 0
+        ? "Nothing to do."
+        : `Deletions scheduled: **${report.deletionsScheduled}**\n` +
           `-# Deletions cancelled: **${report.deletionsCleared}**\n` +
-          `-# Roles restored: **${report.rolesRestored}**`,
-      });
-    }
+          `-# Roles restored: **${report.rolesRestored}**`;
+
+    await auditLog(guild, {
+      type: changed === 0 ? "info" : "success",
+      title: "Booster maintenance completed",
+      description:
+        `Checked **${report.boostersChecked}** booster(s) for this server.\n` +
+        `-# ${actionLine}`,
+    });
 
     reports.push(report);
   }
