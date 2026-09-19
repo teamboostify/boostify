@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "start": "node --env-file=.env .",
+    "start": "bun --env-file=.env .",
     "dev": "tsx --env-file=.env src/index.ts",
     "prisma:generate": "prisma generate"
   },

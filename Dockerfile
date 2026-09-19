@@ -1,18 +1,24 @@
 # syntax=docker/dockerfile:1
 
-FROM oven/bun:latest AS base
+FROM oven/bun:1
 WORKDIR /app
 
-FROM base AS deps
+# Install ALL deps (build tools and the prisma CLI are usually devDependencies)
 COPY package.json bun.lock* ./
-RUN bun install --frozen-lockfile --production
+RUN bun install --frozen-lockfile
 
-FROM base AS runtime
-ENV NODE_ENV=production
-
-COPY --from=deps /app/node_modules ./node_modules
+# Copy source
 COPY . .
 
+# Generate the Prisma client (only if the project uses Prisma) and build
+RUN if [ -f prisma/schema.prisma ]; then bunx prisma generate; fi
+RUN bun run build
+
+ENV NODE_ENV=production
+
+# Give the non-root user ownership
+RUN chown -R bun:bun /app
 USER bun
 
-CMD ["bun", "run", "start"]
+# Push the schema on startup (needs DATABASE_URL at runtime), then start
+CMD ["sh", "-c", "if [ -f prisma/schema.prisma ]; then bunx prisma db push; fi && bun run start"]
