@@ -205,6 +205,37 @@ docker run -d \
   boostify
 ```
 
+## Run with Docker Compose (recommended)
+
+A `docker-compose.yml` is included — it runs the bot **and** a local PostgreSQL
+database, with the schema pushed automatically on startup:
+
+```bash
+cp .env.example .env   # fill in BOT_TOKEN, CLIENT_ID, etc.
+docker compose up -d
+```
+
+The bot image is pulled from `ghcr.io/teamboostify/boostify:latest` (built
+automatically by the `build-and-push` GitHub Actions workflow on every push to
+`main`). If the image isn't available locally yet, Compose builds it from the
+`Dockerfile` instead. To build it yourself and skip the pull:
+
+```bash
+docker compose build
+docker compose up -d
+```
+
+Useful commands:
+
+```bash
+docker compose logs -f bot   # tail bot logs
+docker compose down           # stop everything
+docker compose down -v        # stop and wipe the database volume
+```
+
+> The bot connects to Postgres via the `DATABASE_URL` env var, which Compose
+> wires to the `db` service for you — no need to set it manually.
+
 ---
 
 # 🏗️ Recommended Production Stack

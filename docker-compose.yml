@@ -1,0 +1,36 @@
+name: boostify
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: boostify
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-boostify}
+      POSTGRES_DB: boostify
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U boostify -d boostify"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  bot:
+    # Builds locally if the image isn't pulled yet (compose pulls otherwise)
+    build: .
+    image: ghcr.io/teamboostify/boostify:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Override whatever is in .env so the bot talks to the `db` service
+      DATABASE_URL: postgresql://boostify:${POSTGRES_PASSWORD:-boostify}@db:5432/boostify
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-boostify}
+
+volumes:
+  db-data:
