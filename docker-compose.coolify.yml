@@ -1,0 +1,21 @@
+name: boostify
+
+# Build-free compose file for platforms that build on the server (e.g. Coolify).
+# It only pulls the image built by the .github/workflows/build-and-push.yml
+# workflow, so no bun install / Prisma downloads ever run on your server.
+#
+# Point your Coolify application's "Docker Compose Location" at this file, or
+# use it directly:
+#   docker compose -f docker-compose.coolify.yml pull
+#   docker compose -f docker-compose.coolify.yml up -d
+
+services:
+  bot:
+    image: ${BOOSTIFY_IMAGE:-ghcr.io/teamboostify/boostify:latest}
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Required: point this at your Postgres (managed or otherwise)
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL to your Postgres connection string}
