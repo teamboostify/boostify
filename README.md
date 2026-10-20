@@ -225,6 +225,30 @@ docker compose build
 docker compose up -d
 ```
 
+### Using an external / managed database
+
+Already have a Postgres somewhere (Neon, Supabase, Railway, your VPS, ...)?
+Point the bot at it instead of running the bundled one:
+
+```bash
+# .env
+COMPOSE_PROFILES=          # <-- remove/blank "local-db" so the bundled db doesn't start
+DATABASE_URL=postgresql://user:password@your-host:5432/boostify
+```
+
+```bash
+docker compose up -d
+```
+
+The bundled `db` service is gated behind the `local-db` profile — with it off,
+Compose only starts the bot, and `DATABASE_URL` from your `.env` is passed
+straight through. Note that the container still runs `prisma db push` on
+startup to sync the schema, so make sure the DB user has rights to do that
+(or run `bunx prisma db push` yourself beforehand).
+
+> Inside Docker, `localhost` refers to the container itself — always use a
+> hostname your container can reach (no `localhost`) for external databases.
+
 Useful commands:
 
 ```bash
@@ -233,8 +257,8 @@ docker compose down           # stop everything
 docker compose down -v        # stop and wipe the database volume
 ```
 
-> The bot connects to Postgres via the `DATABASE_URL` env var, which Compose
-> wires to the `db` service for you — no need to set it manually.
+> With the bundled database, Compose wires `DATABASE_URL` to the `db` service
+> for you — no need to set it manually.
 
 ---
 

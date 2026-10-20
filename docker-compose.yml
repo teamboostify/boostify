@@ -1,8 +1,11 @@
 name: boostify
 
 services:
+  # Bundled Postgres — only started when the "local-db" profile is active
+  # (COMPOSE_PROFILES=local-db in .env). Disable it if you use an external DB.
   db:
     image: postgres:16-alpine
+    profiles: ["local-db"]
     restart: unless-stopped
     environment:
       POSTGRES_USER: boostify
@@ -24,12 +27,15 @@ services:
     depends_on:
       db:
         condition: service_healthy
+        # Warns instead of failing when the "local-db" profile is off (external DB)
+        required: false
     env_file:
       - path: .env
         required: false
     environment:
-      # Override whatever is in .env so the bot talks to the `db` service
-      DATABASE_URL: postgresql://boostify:${POSTGRES_PASSWORD:-boostify}@db:5432/boostify
+      # If DATABASE_URL is set in .env (external/managed Postgres) it wins,
+      # otherwise the bot talks to the bundled `db` service.
+      DATABASE_URL: ${DATABASE_URL:-postgresql://boostify:${POSTGRES_PASSWORD:-boostify}@db:5432/boostify}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-boostify}
 
 volumes:
