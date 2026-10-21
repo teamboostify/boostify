@@ -8,7 +8,7 @@ ENV NODE_OPTIONS="--dns-result-order=ipv4first"
 
 COPY package.json bun.lock* ./
 RUN --mount=type=cache,target=/root/.bun/install/cache \
-    bun install --frozen-lockfile
+    bun install --frozen-lockfile --verbose
 
 COPY . .
 
