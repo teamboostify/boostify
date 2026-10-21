@@ -1,7 +1,11 @@
 /node_modules
 /dist
 .env
-src/generated/
+
+# Emitted Prisma 8 contract artifacts, generated from src/prisma/contract.prisma
+# by `bun run prisma:generate`.
+src/prisma/contract.json
+src/prisma/contract.d.ts
 
 src/commands/*.test.ts
 src/events/*.test.ts

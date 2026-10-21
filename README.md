@@ -44,7 +44,7 @@ Get Boostify running in minutes using the official cloud version or self-host it
 | Option | Description |
 | --- | --- |
 | ☁️ **Cloud Hosted** | Use the official Boostify bot instantly. |
-| 🖥️ **Self Hosted** | Deploy your own Boostify instance using Node.js or Docker. |
+| 🖥️ **Self Hosted** | Deploy your own Boostify instance using Bun or Docker. |
 
 ---
 
@@ -96,7 +96,7 @@ Self-host Boostify for full control and customization.
 
 ## Required
 
-- Node.js 20+
+- [Bun](https://bun.sh) 1.2+
 - PostgreSQL
 - Git
 - Discord Bot Token
@@ -124,7 +124,7 @@ cd boostify
 ## 2. Install Dependencies
 
 ```bash
-npm install
+bun install
 ```
 
 ---
@@ -154,17 +154,60 @@ DATABASE_URL=postgresql://user:password@localhost:5432/boostify
 
 # Database Setup
 
-Generate the Prisma client:
+Boostify describes its schema with a **Prisma 8 data contract**, the single
+source of truth in [`src/prisma/contract.prisma`](src/prisma/contract.prisma).
+The contract is compiled into a runtime artifact and a type declaration, and the
+live database is verified against it.
+
+## 1. Emit the contract
 
 ```bash
-npx prisma generate
+bun run prisma:generate
 ```
 
-Run migrations:
+This writes `src/prisma/contract.json` (runtime) and `src/prisma/contract.d.ts`
+(types). Run it before `bun run build` — the build copies the emitted contract
+into `dist/`.
+
+## 2. Set up the database
+
+An **empty** database is created from the contract:
 
 ```bash
-npx prisma migrate deploy
+bunx prisma db init --db "$DATABASE_URL"
 ```
+
+An **existing** database is *adopted*: `db sign` verifies the live schema
+against the contract and records the contract in the database's marker table.
+It changes no schema and no data, and refuses to sign a database that
+disagrees with the contract.
+
+```bash
+bunx prisma db sign --db "$DATABASE_URL" --no-advance-ref
+```
+
+> [!NOTE]
+> `--no-advance-ref` keeps the command from writing to the migration
+> directory in `migrations/`. Drop it when you want the signed contract
+> checkpointed into the repository's migration history.
+
+To check that the database and the contract agree:
+
+```bash
+bunx prisma db verify --db "$DATABASE_URL"
+```
+
+## 3. Changing the schema later
+
+Edit `src/prisma/contract.prisma`, emit it, then plan and apply a migration:
+
+```bash
+bun run prisma:generate
+bunx prisma migration plan   # offline: derives the migration package from contract changes
+bunx prisma db migrate --db "$DATABASE_URL"
+```
+
+The migration packages and the signed baseline live in `migrations/`.
 
 ---
 
@@ -173,15 +216,16 @@ npx prisma migrate deploy
 ## Development
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 ## Production
 
 ```bash
-npm run build
+bun run prisma:generate
+bun run build
 
-npm start
+bun run start
 ```
 
 ---
@@ -208,7 +252,7 @@ docker run -d \
 ## Run with Docker Compose (recommended)
 
 A `docker-compose.yml` is included — it runs the bot **and** a local PostgreSQL
-database, with the schema pushed automatically on startup:
+database, with the schema created from the data contract on startup:
 
 ```bash
 cp .env.example .env   # fill in BOT_TOKEN, CLIENT_ID, etc.
@@ -242,9 +286,10 @@ docker compose up -d
 
 The bundled `db` service is gated behind the `local-db` profile — with it off,
 Compose only starts the bot, and `DATABASE_URL` from your `.env` is passed
-straight through. Note that the container still runs `prisma db push` on
-startup to sync the schema, so make sure the DB user has rights to do that
-(or run `bunx prisma db push` yourself beforehand).
+straight through. Note that the container still runs `prisma db init` on
+startup to bring the database in line with the contract, so make sure the DB
+user has rights to do that (or run `bunx prisma db init --db "$DATABASE_URL"`
+yourself beforehand).
 
 > Inside Docker, `localhost` refers to the container itself — always use a
 > hostname your container can reach (no `localhost`) for external databases.

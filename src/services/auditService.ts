@@ -1,5 +1,5 @@
 import { Guild, PermissionFlagsBits, TextChannel } from "discord.js";
-import { prisma } from "../libs/database.js";
+import { db } from "../prisma/db.js";
 import { logger } from "../libs/logger.js";
 import { Embed, Accent } from "../base/functions/embed.js";
 
@@ -19,9 +19,9 @@ export interface AuditEntry {
 }
 
 export async function getLogChannel(guild: Guild): Promise<TextChannel | null> {
-  const settings = await prisma.guildSetting.findUnique({
-    where: { gid: guild.id },
-  });
+  const settings = await db.orm.public.GuildSetting.where({
+    gid: guild.id,
+  }).first();
   if (!settings?.logChannelId) return null;
 
   const channel = guild.channels.cache.get(settings.logChannelId) as

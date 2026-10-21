@@ -17,15 +17,21 @@ import {
   patchCustomRoleStoredName,
 } from "./boosterService.js";
 import { auditLog } from "./auditService.js";
-import { prisma } from "../libs/database.js";
-import type { Prisma } from "../generated/prisma/client.js";
+import { db } from "../prisma/db.js";
 import { logger } from "../libs/logger.js";
 
-export interface LevelRoleConfig {
+/**
+ * A level-role entry as stored in the `Guild.levelRoles` JSON column.
+ *
+ * Declared as a type alias rather than an interface on purpose: a type alias
+ * gets an implicit index signature, so it satisfies the JSON value type the
+ * `jsonb` column accepts without a cast.
+ */
+export type LevelRoleConfig = {
   minBoosts: number;
   discordRoleId: string;
   name?: string;
-}
+};
 
 export interface StyleTiers {
   gradientMinBoosts: number;
@@ -56,9 +62,9 @@ function isLevelRoleConfig(value: unknown): value is LevelRoleConfig {
 export async function getLevelRoleConfig(
   discordGuildId: string
 ): Promise<LevelRoleConfig[]> {
-  const guild = await prisma.guild.findUnique({
-    where: { discordId: discordGuildId },
-  });
+  const guild = await db.orm.public.Guild.where({
+    discordId: discordGuildId,
+  }).first();
   const raw = guild?.levelRoles;
   if (!Array.isArray(raw)) return [];
   const list = raw as unknown[];
@@ -69,16 +75,15 @@ export async function setLevelRoleConfig(
   discordGuildId: string,
   config: LevelRoleConfig[]
 ): Promise<void> {
-  await prisma.guild.update({
-    where: { discordId: discordGuildId },
-    data: { levelRoles: config as unknown as Prisma.InputJsonValue },
+  await db.orm.public.Guild.where({ discordId: discordGuildId }).update({
+    levelRoles: config,
   });
 }
 
 export async function getStyleTiers(discordGuildId: string): Promise<StyleTiers> {
-  const guild = await prisma.guild.findUnique({
-    where: { discordId: discordGuildId },
-  });
+  const guild = await db.orm.public.Guild.where({
+    discordId: discordGuildId,
+  }).first();
   return {
     gradientMinBoosts: guild?.gradientMinBoosts ?? 2,
     holographicMinBoosts: guild?.holographicMinBoosts ?? 3,

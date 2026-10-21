@@ -22,9 +22,9 @@ process.on("uncaughtException", (error) => {
   );
 });
 
-if (!fs.existsSync(path.join(__dirname, 'generated'))) {
-  logger.fatal(`No generated prisma folder could be found at ${__dirname}, to generate run ${chalk.bold("npm run prisma:generate")}.`)
-  throw new Error(`No prisma folder found`)
+if (!fs.existsSync(path.join(__dirname, "prisma", "contract.json"))) {
+  logger.fatal(`No emitted prisma contract could be found at ${__dirname}, to generate run ${chalk.bold("bun run prisma:generate")}.`)
+  throw new Error(`No prisma contract found`)
 }
 
 process.on("unhandledRejection", (reason) => {

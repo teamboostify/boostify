@@ -26,10 +26,8 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Generate Prisma Client
-        env:
-          DATABASE_URL: "postgresql://user:pass@localhost:5432/db"
-        run: bunx prisma generate
+      - name: Emit Prisma contract
+        run: bunx prisma contract emit
 
       - name: Typecheck
         run: bunx tsc --noEmit

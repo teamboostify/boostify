@@ -1,0 +1,74 @@
+// use prisma-8
+// Prisma 8 data contract for Boostify.
+// This file is the source of truth for the data model: `prisma contract emit`
+// turns it into `contract.json` (runtime IR) and `contract.d.ts` (types).
+//
+// The timestamp columns are authored as `TimestampString(3)` on purpose: they
+// map to PostgreSQL `timestamp(3)`, exactly like the `DateTime` columns of the
+// Prisma 7 schema this database was created with, so the live database keeps
+// working untouched. A JS `Date` is not accepted by these columns — use the
+// string helpers in `src/libs/timestamps.ts`.
+
+model Guild {
+  id                   String             @id(map: "Guild_pkey") @onCreate(cuid(2))
+  discordId            String
+  name                 String
+  iconUrl              String?
+  gradientMinBoosts    Int                @default(2)
+  holographicMinBoosts Int                @default(3)
+  roleIconMinBoosts    Int                @default(3)
+  levelRoles           Jsonb?
+  createdAt            TimestampString(3) @default(now()) @onCreate(now())
+  updatedAt            TimestampString(3) @onCreate(now()) @onUpdate(now())
+  boosters             Booster[]
+
+  @@index([discordId], map: "Guild_discordId_key", unique: true)
+}
+
+model Booster {
+  id          String              @id(map: "Booster_pkey") @onCreate(cuid(2))
+  userId      String
+  guildId     String
+  boostedAt   TimestampString(3)  @default(now()) @onCreate(now())
+  boostCounts Int                 @default(1)
+  expiresAt   TimestampString(3)?
+  active      Boolean             @default(true)
+  createdAt   TimestampString(3)  @default(now()) @onCreate(now())
+  updatedAt   TimestampString(3)  @onCreate(now()) @onUpdate(now())
+  customRole  CustomRole?
+  guild       Guild               @relation(fields: [guildId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "Booster_guildId_fkey")
+
+  @@index([guildId], map: "Booster_guildId_idx")
+  @@index([userId, guildId], map: "Booster_userId_guildId_key", unique: true)
+  @@index([userId], map: "Booster_userId_idx")
+}
+
+model CustomRole {
+  id                String              @id(map: "CustomRole_pkey") @onCreate(cuid(2))
+  boosterId         String
+  discordRoleId     String
+  name              String              @default("")
+  color             String?
+  gradientColor     String?
+  holographic       Boolean             @default(false)
+  icon              String?
+  deleteScheduledAt TimestampString(3)?
+  createdAt         TimestampString(3)  @default(now()) @onCreate(now())
+  updatedAt         TimestampString(3)  @onCreate(now()) @onUpdate(now())
+  booster           Booster             @relation(fields: [boosterId], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "CustomRole_boosterId_fkey")
+
+  @@index([boosterId], map: "CustomRole_boosterId_key", unique: true)
+  @@index([deleteScheduledAt], map: "CustomRole_deleteScheduledAt_idx")
+  @@index([discordRoleId], map: "CustomRole_discordRoleId_key", unique: true)
+}
+
+model GuildSetting {
+  uid            String             @id(map: "GuildSetting_pkey") @onCreate(cuid(2))
+  gid            String
+  greetChannelId String
+  logChannelId   String
+  createdAt      TimestampString(3) @default(now()) @onCreate(now())
+  lastCheckup    TimestampString(3) @default(now()) @onCreate(now())
+
+  @@index([gid], map: "GuildSetting_gid_key", unique: true)
+}

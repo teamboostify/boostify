@@ -11,18 +11,23 @@ RUN --mount=type=cache,target=/root/.bun/install/cache \
 # Copy source
 COPY . .
 
-# Generate the Prisma client (only if the project uses Prisma) and build
-# DATABASE_URL is only needed to generate the client on a Postgres schema.
-ARG DATABASE_URL="postgresql://user:pass@localhost:5432/boostify"
-ENV DATABASE_URL=$DATABASE_URL
-RUN if [ -f prisma/schema.prisma ]; then bunx prisma generate; fi
+# Emit the Prisma 8 data contract (src/prisma/contract.prisma -> contract.json
+# and contract.d.ts) and build. The emit step is offline — it needs no database.
+RUN bunx prisma contract emit
 RUN bun run build
 
 ENV NODE_ENV=production
+
+# Default connection string; the runtime environment overrides it.
+ARG DATABASE_URL="postgresql://user:pass@localhost:5432/boostify"
+ENV DATABASE_URL=$DATABASE_URL
 
 # Give the non-root user ownership
 RUN chown -R bun:bun /app
 USER bun
 
-# Push the schema on startup (needs DATABASE_URL at runtime), then start
-CMD ["sh", "-c", "if [ -f prisma/schema.prisma ]; then bunx prisma db push; fi && bun run start"]
+# The schema is owned by the data contract, never pushed. `db init` is the
+# non-destructive successor of `db push`: it creates whatever the contract is
+# missing, leaves compatible objects alone, refuses changes that would drop
+# data, and signs the database. On an adopted database it is a no-op.
+CMD ["sh", "-c", "if [ -n \"$DATABASE_URL\" ]; then bunx prisma db init --db \"$DATABASE_URL\" || exit 1; fi; exec bun run start"]

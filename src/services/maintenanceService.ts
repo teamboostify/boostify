@@ -2,8 +2,9 @@ import {
   Client,
   Guild,
 } from "discord.js";
-import { prisma } from "../libs/database.js";
+import { db } from "../prisma/db.js";
 import { logger } from "../libs/logger.js";
+import { nowTimestampString } from "../libs/timestamps.js";
 import {
   getActiveBoosters,
   scheduleCustomRoleDeletionAfterGrace,
@@ -16,15 +17,19 @@ type BoostersWithRole = Awaited<ReturnType<typeof getActiveBoosters>>;
 type BoosterWithRole = BoostersWithRole[number];
 
 export async function processDueCustomRoleDeletions(client: Client): Promise<void> {
-  const now = new Date();
-  const due = await prisma.customRole.findMany({
-    where: { deleteScheduledAt: { lte: now } },
-    include: { booster: { include: { guild: true } } },
-  });
+  const now = nowTimestampString();
+  const due = await db.orm.public.CustomRole.where((cr) =>
+    cr.deleteScheduledAt.lte(now)
+  )
+    .include("booster", (booster) => booster.include("guild"))
+    .all();
 
   for (const cr of due) {
+    const booster = cr.booster;
+    if (!booster) continue;
+
     try {
-      const guild = await client.guilds.fetch(cr.booster.guild.discordId).catch(() => null);
+      const guild = await client.guilds.fetch(booster.guild.discordId).catch(() => null);
       if (guild) {
         const discordRole =
           guild.roles.cache.get(cr.discordRoleId) ??
@@ -36,14 +41,14 @@ export async function processDueCustomRoleDeletions(client: Client): Promise<voi
         await auditLog(guild, {
           type: "warning",
           title: "Custom role deleted",
-          description: `Removed <@&${cr.discordRoleId}> after the boost grace period ended for <@${cr.booster.userId}>.`,
+          description: `Removed <@&${cr.discordRoleId}> after the boost grace period ended for <@${booster.userId}>.`,
           fields: [
-            { name: "User", value: `<@${cr.booster.userId}>`, inline: true },
+            { name: "User", value: `<@${booster.userId}>`, inline: true },
             { name: "Role", value: `<@&${cr.discordRoleId}>`, inline: true },
           ],
         });
       }
-      await prisma.customRole.delete({ where: { id: cr.id } });
+      await db.orm.public.CustomRole.where({ id: cr.id }).delete();
     } catch (err) {
       logger.error(`Custom role cleanup failed for ${cr.id}: ${String(err)}`);
     }

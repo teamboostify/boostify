@@ -7,7 +7,7 @@ import {
   ContainerBuilder,
 } from "discord.js";
 import { Command } from "../base/classes/command.js";
-import { prisma } from "../libs/database.js";
+import { db } from "../prisma/db.js";
 import { SystemColors } from "../libs/colors.js";
 
 export default new Command({
@@ -17,11 +17,9 @@ export default new Command({
   async execute(interaction) {
     if (!interaction.guild) return;
 
-    const serversetup = await prisma.guildSetting.findFirst({
-        where: {
+    const serversetup = await db.orm.public.GuildSetting.where({
             gid: interaction.guild.id
-        }
-    });
+    }).first();
 
     if (serversetup) {
       const container = new ContainerBuilder().setAccentColor(SystemColors.main)

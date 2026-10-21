@@ -20,7 +20,7 @@ import {
 } from "../services/roleService.js";
 import { auditLog } from "../services/auditService.js";
 import { logger } from "../libs/logger.js";
-import { prisma } from "../libs/database.js";
+import { db } from "../prisma/db.js";
 import { DiscordClient } from "../base/types/discord.js";
 import { SystemColors } from "../libs/colors.js";
 import { Embed, Accent } from "../base/functions/embed.js";
@@ -68,7 +68,7 @@ export default {
 };
 
 async function getGuildSettings(guildId: string) {
-  return prisma.guildSetting.findUnique({ where: { gid: guildId } });
+  return db.orm.public.GuildSetting.where({ gid: guildId }).first();
 }
 async function safeSend(
   channel: TextChannel | undefined,
