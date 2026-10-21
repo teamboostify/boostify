@@ -6,7 +6,7 @@ WORKDIR /app
 # Install ALL deps (build tools and the prisma CLI are usually devDependencies)
 COPY package.json bun.lock* ./
 RUN --mount=type=cache,target=/root/.bun/install/cache \
-    bun install --frozen-lockfile
+    bun install --frozen-lockfile --verbose --no-scripts
 
 # Copy source
 COPY . .
