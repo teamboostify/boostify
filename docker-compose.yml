@@ -21,7 +21,9 @@ services:
 
   bot:
     # Builds locally if the image isn't pulled yet (compose pulls otherwise)
-    build: .
+    build:
+      context: .
+      network: host   # build containers use the host's network, skipping the bridge/DNS path
     image: ghcr.io/teamboostify/boostify:latest
     restart: unless-stopped
     depends_on:
